@@ -1,0 +1,159 @@
+post:
+  summary: Create a new client
+  description: Adds a new client to the system with basic identity information. Addresses should be added subsequently using the address endpoints.
+  tags:
+    - Client
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/client.schemas.yaml#/CreateClientRequest"
+  responses:
+    "201":
+      description: Client created successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/client.schemas.yaml#/ClientIdentity"
+    "400":
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+    "409":
+      description: Conflict - Email or Phone already exists
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+get:
+  summary: Get all clients
+  description: Retrieve a paginated list of clients with search and filtering options.
+  tags:
+    - Client
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+      example: 1
+      description: Page number to retrieve
+    - in: query
+      name: limit
+      schema:
+        type: integer
+        default: 10
+      example: 10
+      description: Number of items per page
+    - in: query
+      name: search
+      schema:
+        type: string
+      example: "Slash"
+      description: Search term for name, email, or phone
+    - in: query
+      name: sort
+      schema:
+        type: string
+        default: "-createdAt"
+      example: "-createdAt,name"
+      description: |
+        Sort results by fields.
+        - **Ascending:** `field` (e.g., `name`).
+        - **Descending:** `-field` (e.g., `-createdAt`).
+        - **Multi-sort:** `field1,field2`
+    - in: query
+      name: isActive
+      schema:
+        type: boolean
+      example: true
+      description: Filter by activity status
+    - in: query
+      name: clientType
+      schema:
+        type: string
+        enum: [Individual, Corporate]
+      example: "Corporate"
+      description: Filter by client category
+  responses:
+    "200":
+      description: Clients fetched successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "../components/client.schemas.yaml#/ClientIdentity"
+                      meta:
+                        $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+
+archived:
+  get:
+    summary: Get archived clients
+    description: Retrieve a list of soft-deleted clients.
+    tags:
+      - Client
+    security:
+      - bearerAuth: []
+    responses:
+      "200":
+        description: Archived clients fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/client.schemas.yaml#/ClientIdentity"
+
+archivedById:
+  get:
+    summary: Get an archived client by ID
+    description: Retrieve detailed information about a specific archived client.
+    tags:
+      - Client
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Archived client details fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/client.schemas.yaml#/ClientDetail"

@@ -1,0 +1,70 @@
+patch:
+  summary: Update an address
+  description: Update specific fields of an existing address.
+  tags:
+    - Client Address
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: ID of the address to update
+      example: "7bc5da2d-9b43-4107-9543-0a4836661d51"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/address.schemas.yaml#/AddressUpdateRequest"
+  responses:
+    "200":
+      description: Address updated successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/address.schemas.yaml#/ClientAddress"
+    "400":
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+    "404":
+      description: Address not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+delete:
+  summary: Soft delete an address
+  description: Mark an address as deleted without removing it from the database.
+  tags:
+    - Client Address
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: ID of the address to delete
+      example: "7bc5da2d-9b43-4107-9543-0a4836661d51"
+  responses:
+    "204":
+      description: Address deleted successfully (No Content)
+    "404":
+      description: Address not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

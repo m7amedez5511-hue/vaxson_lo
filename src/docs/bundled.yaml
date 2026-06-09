@@ -1,0 +1,6471 @@
+openapi: 3.0.0
+info:
+  title: Logistics API
+  version: 1.0.0
+  description: API for managing logistics operations, clients, and addresses.
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+paths:
+  /v1/auth/login:
+    post:
+      summary: Login User
+      description: Sign in user using endpoint to login and get token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Wrong password or username not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard summary
+      description: Returns a consolidated view of counts, alerts, active trips, and account security.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard summary fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: dashboard summary fetched successfully
+                  data:
+                    $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Unauthorized
+  /v1/users:
+    post:
+      summary: Create a new user
+      description: Adds a new user to the system with basic identity information.
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserIdentity'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Email or Phone already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all users
+      description: Retrieve a paginated list of User with search and filtering options.
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, email, or phone
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+      responses:
+        '200':
+          description: users fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+    info:
+      get:
+        summary: Get current user info
+        description: Retrieve the currently authenticated user's information
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: User info retrieved successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/UserIdentity'
+                            meta:
+                              $ref: '#/components/schemas/PaginationMeta'
+          '401':
+            description: Unauthorized - Authentication required
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    archived:
+      get:
+        summary: Get archived users
+        description: Retrieve a paginated list of soft-deleted users.
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: page
+            schema:
+              type: integer
+              default: 1
+            example: 1
+            description: Page number to retrieve
+          - in: query
+            name: limit
+            schema:
+              type: integer
+              default: 10
+            example: 10
+            description: Number of items per page
+          - in: query
+            name: search
+            schema:
+              type: string
+            example: Slash
+            description: Search term for name, email, or phone
+          - in: query
+            name: sort
+            schema:
+              type: string
+              default: '-createdAt'
+            example: '-createdAt,name'
+            description: |
+              Sort results by fields.
+              - **Ascending:** `field` (e.g., `name`).
+              - **Descending:** `-field` (e.g., `-createdAt`).
+              - **Multi-sort:** `field1,field2`
+        responses:
+          '200':
+            description: archived users fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/UserIdentity'
+                            meta:
+                              $ref: '#/components/schemas/PaginationMeta'
+    archivedById:
+      get:
+        summary: Get archived user by ID
+        description: Retrieve a soft-deleted user by their ID.
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: User ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: Archived user fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/UserIdentity'
+          '404':
+            description: User not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    userById:
+      get:
+        summary: Get user by ID
+        description: Retrieve a specific user by their ID
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: User ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: User fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/UserIdentity'
+                            meta:
+                              $ref: '#/components/schemas/PaginationMeta'
+          '404':
+            description: User not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+      put:
+        summary: Update user
+        description: Update user information (requires authentication)
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: User ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserRequest'
+        responses:
+          '200':
+            description: User updated successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: users.update_successfuly
+                    success:
+                      type: boolean
+                      example: true
+                    responseAt:
+                      type: string
+                      format: date-time
+                    data:
+                      type: object
+                      properties:
+                        user:
+                          $ref: '#/components/schemas/UserIdentity'
+          '401':
+            description: Unauthorized - Authentication required
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+          '404':
+            description: User not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+      delete:
+        summary: Soft delete user
+        description: Mark a user as deleted (soft delete)
+        tags:
+          - User
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: User ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: User deleted successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: users.deletw_successfuly
+                    success:
+                      type: boolean
+                      example: true
+                    responseAt:
+                      type: string
+                      format: date-time
+                    data:
+                      type: object
+                      properties:
+                        user:
+                          $ref: '#/components/schemas/UserIdentity'
+          '404':
+            description: User not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/users/me:
+    get:
+      summary: Get current user info
+      description: Retrieve the currently authenticated user's information
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User info retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/users/archived:
+    get:
+      summary: Get archived users
+      description: Retrieve a paginated list of soft-deleted users.
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, email, or phone
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+      responses:
+        '200':
+          description: archived users fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+  /v1/users/archived/{id}:
+    get:
+      summary: Get archived user by ID
+      description: Retrieve a soft-deleted user by their ID.
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Archived user fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserIdentity'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/users/{id}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: User fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update user
+      description: Update user information (requires authentication)
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: users.update_successfuly
+                  success:
+                    type: boolean
+                    example: true
+                  responseAt:
+                    type: string
+                    format: date-time
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/UserIdentity'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft delete user
+      description: Mark a user as deleted (soft delete)
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: users.deletw_successfuly
+                  success:
+                    type: boolean
+                    example: true
+                  responseAt:
+                    type: string
+                    format: date-time
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/UserIdentity'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/audit:
+    get:
+      summary: Get Activity Logs
+      description: Retrieve a paginated and filtered list of all system activities/audit logs.
+      tags:
+        - Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: name
+          in: query
+          description: Search by user name or userName
+          schema:
+            type: string
+        - name: module
+          in: query
+          description: Filter by module (e.g. Branch, User, Order)
+          schema:
+            type: string
+        - name: action
+          in: query
+          description: Filter by action (e.g. CREATE_BRANCH, UPDATE_USER)
+          schema:
+            type: string
+        - name: fromDate
+          in: query
+          description: Filter from date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          description: Filter to date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Activities fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityLogListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/audit/{id}:
+    get:
+      summary: Get Activity Log Details
+      description: Get full details of a specific activity log entry by ID.
+      tags:
+        - Audit
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Activity details fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityLogDetailResponse'
+        '404':
+          description: Activity log not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/role:
+    post:
+      summary: Create a new role
+      description: Adds a new role to the system with basic identity information.
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: Role created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RoleIdentity'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all Roles
+      description: Retrieve a paginated list of Role with search and filtering options.
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, description
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+      responses:
+        '200':
+          description: roles fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RoleIdentity'
+    archived:
+      get:
+        summary: Get archived roles
+        description: Retrieve a paginated list of soft-deleted roles.
+        tags:
+          - Role
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: page
+            schema:
+              type: integer
+              default: 1
+            example: 1
+            description: Page number to retrieve
+          - in: query
+            name: limit
+            schema:
+              type: integer
+              default: 10
+            example: 10
+            description: Number of items per page
+          - in: query
+            name: search
+            schema:
+              type: string
+            example: Slash
+            description: Search term for name or description
+          - in: query
+            name: sort
+            schema:
+              type: string
+              default: '-createdAt'
+            example: '-createdAt,name'
+            description: |
+              Sort results by fields.
+              - **Ascending:** `field` (e.g., `name`).
+              - **Descending:** `-field` (e.g., `-createdAt`).
+              - **Multi-sort:** `field1,field2`
+          - in: query
+            name: isActive
+            schema:
+              type: boolean
+            example: true
+            description: Filter by activity status
+        responses:
+          '200':
+            description: archived roles fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/RoleIdentity'
+    archivedById:
+      get:
+        summary: Get archived role by ID
+        description: Retrieve a soft-deleted role by its ID.
+        tags:
+          - Role
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: Role ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: Archived role fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/RoleIdentity'
+          '404':
+            description: Role not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/role/archived:
+    get:
+      summary: Get archived roles
+      description: Retrieve a paginated list of soft-deleted roles.
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name or description
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+      responses:
+        '200':
+          description: archived roles fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RoleIdentity'
+  /v1/role/archived/{id}:
+    get:
+      summary: Get archived role by ID
+      description: Retrieve a soft-deleted role by its ID.
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Role ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Archived role fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RoleIdentity'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/role/{id}:
+    get:
+      summary: Get role by ID
+      description: Retrieve a specific role by their ID
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Role ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Role fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RoleIdentity'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update role
+      description: Update role information
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Role ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleRequest'
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RoleIdentity'
+        '404':
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft delete Role
+      description: Mark a role as deleted (soft delete)
+      tags:
+        - Role
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Role ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Role deleted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RoleIdentity'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/branches:
+    get:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Get all active branches
+      description: Retrieves a list of all active branches with support for search, sorting, and pagination.
+      parameters:
+        - name: search
+          in: query
+          description: Search term for name, email, or phone
+          schema:
+            type: string
+          example: Riyadh
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          description: Fields to sort by (e.g., -createdAt)
+          schema:
+            type: string
+            default: '-createdAt'
+      responses:
+        '200':
+          description: A list of branches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BranchDetail'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Create a new branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBranchRequest'
+      responses:
+        '201':
+          description: Branch created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BranchDetail'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/branches/{id}:
+    get:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Get branch by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 831d6976-9e99-4a45-9a49-76ad2675af49
+      responses:
+        '200':
+          description: Branch details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BranchDetail'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Update branch details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 831d6976-9e99-4a45-9a49-76ad2675af49
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchRequest'
+      responses:
+        '200':
+          description: Branch updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BranchDetail'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Soft delete a branch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 831d6976-9e99-4a45-9a49-76ad2675af49
+      responses:
+        '204':
+          description: Branch deleted successfully
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/branches/archived:
+    get:
+      tags:
+        - Branches
+      security:
+        - bearerAuth: []
+      summary: Get archived branches
+      description: Retrieve a list of soft-deleted branches.
+      responses:
+        '200':
+          description: A list of archived branches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BranchDetail'
+  /v1/cars:
+    get:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Get all cars
+      description: Retrieve a list of cars with filtering, sorting, and pagination.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: manufacturer
+          in: query
+          schema:
+            type: string
+        - name: currentStatus
+          in: query
+          schema:
+            type: string
+            enum:
+              - Active
+              - InMaintenance
+              - Inactive
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Car'
+                      meta:
+                        $ref: '#/components/schemas/PaginationMeta'
+    post:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Create a new car
+      description: Registers a new car and creates an initial status history record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCarRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Car'
+  /v1/cars/{id}:
+    get:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Get car by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Car'
+    patch:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Update car details
+      description: Updates car info. If status changes, a new history record is created.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCarRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Car'
+    delete:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Delete car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+  /v1/cars/archived:
+    get:
+      tags:
+        - Car
+      security:
+        - bearerAuth: []
+      summary: Get archived cars
+      description: Retrieve a list of soft-deleted cars.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Car'
+  /v1/car-images/car/{id}:
+    post:
+      tags:
+        - Car Images
+      summary: Upload Car or Maintenance Images
+      description: |
+        Upload up to 6 images for a specific vehicle. 
+        - If **maintenanceId** is provided, these images will be linked to that specific maintenance record.
+        - If **maintenanceId** is omitted, the images will be general car photos.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Car ID (UUID)
+          schema:
+            type: string
+            format: uuid
+            default: f70ce17b-649e-4cb8-a34e-d18f93d42730
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - images
+              properties:
+                images:
+                  type: array
+                  description: Choose up to 6 image files.
+                  minItems: 1
+                  maxItems: 6
+                  items:
+                    type: string
+                    format: binary
+                stage:
+                  type: string
+                  enum:
+                    - BEFORE
+                    - AFTER
+                    - GENERAL
+                  default: GENERAL
+                  description: Stage of the car (e.g., BEFORE or AFTER maintenance)
+                maintenanceId:
+                  type: string
+                  format: uuid
+                  description: Optional. The ID of the maintenance record.
+            encoding:
+              images:
+                contentType: image/png, image/jpeg, image/jpg
+      responses:
+        '201':
+          description: Images uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AddCarImagesResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags:
+        - Car Images
+      summary: Get all images for a specific car
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique ID of the car
+          schema:
+            type: string
+            format: uuid
+            default: f70ce17b-649e-4cb8-a34e-d18f93d42730
+        - name: day
+          in: query
+          schema:
+            type: integer
+        - name: month
+          in: query
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: List of images
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CarImage'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /api/v1/car-images/car/{id}/archive:
+    get:
+      tags:
+        - Car Images
+      summary: Get archived (deleted) images for a specific car
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique ID of the car
+          schema:
+            type: string
+            format: uuid
+            default: f70ce17b-649e-4cb8-a34e-d18f93d42730
+      responses:
+        '200':
+          description: List of archived images
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CarImage'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /api/v1/car-images/{imageId}: null
+  /v1/car-images/{imageId}:
+    delete:
+      tags:
+        - Car Images
+      summary: Delete a specific car image (Soft Delete)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Image deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/cars/{carId}/maintenance:
+    post:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Create a maintenance record
+      description: Creates a new maintenance record for a car and automatically updates the car status to `InMaintenance`.
+      parameters:
+        - in: path
+          name: carId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 64650231-e2ba-4991-b8bd-75b9682b4d8c
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMaintenanceRequest'
+      responses:
+        '201':
+          description: Maintenance record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceResponse'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Get maintenance history for a car
+      description: Returns all maintenance records for the specified car ordered by creation date descending.
+      parameters:
+        - in: path
+          name: carId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 64650231-e2ba-4991-b8bd-75b9682b4d8c
+      responses:
+        '200':
+          description: List of maintenance records
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MaintenanceRecord'
+  /v1/cars/{carId}/maintenance/{maintenanceId}:
+    patch:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Update a maintenance record
+      description: Updates the reason, cost, or dates of an existing maintenance record.
+      parameters:
+        - in: path
+          name: carId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 64650231-e2ba-4991-b8bd-75b9682b4d8c
+        - in: path
+          name: maintenanceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e9ab8ea8-5176-4270-be66-3bb92d2c3aca
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMaintenanceRequest'
+      responses:
+        '200':
+          description: Maintenance record updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceResponse'
+        '404':
+          description: Maintenance record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Delete a maintenance record
+      description: |
+        Soft-deletes the maintenance record and automatically reverts the car status back to `Active`.
+        A new entry is added to `CarStatusHistory` to record this transition.
+      parameters:
+        - in: path
+          name: carId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: 64650231-e2ba-4991-b8bd-75b9682b4d8c
+        - in: path
+          name: maintenanceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: e9ab8ea8-5176-4270-be66-3bb92d2c3aca
+      responses:
+        '204':
+          description: Maintenance deleted effectively (No Content)
+        '404':
+          description: Maintenance record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/cars/{carId}/maintenance/archived:
+    get:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Get archived maintenance for a car
+      description: Retrieve soft-deleted maintenance records for a specific car.
+      parameters:
+        - in: path
+          name: carId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Archived maintenance fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MaintenanceRecord'
+  /v1/maintenance/archived:
+    get:
+      tags:
+        - Car Maintenance
+      security:
+        - bearerAuth: []
+      summary: Get ALL archived maintenance records
+      description: Retrieve a global list of all soft-deleted maintenance records in the system.
+      responses:
+        '200':
+          description: Global archived maintenance fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MaintenanceRecord'
+  /v1/client:
+    post:
+      summary: Create a new client
+      description: Adds a new client to the system with basic identity information. Addresses should be added subsequently using the address endpoints.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClientRequest'
+      responses:
+        '201':
+          description: Client created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientIdentity'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Email or Phone already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all clients
+      description: Retrieve a paginated list of clients with search and filtering options.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, email, or phone
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+        - in: query
+          name: clientType
+          schema:
+            type: string
+            enum:
+              - Individual
+              - Corporate
+          example: Corporate
+          description: Filter by client category
+      responses:
+        '200':
+          description: Clients fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ClientIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+    archived:
+      get:
+        summary: Get archived clients
+        description: Retrieve a list of soft-deleted clients.
+        tags:
+          - Client
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: Archived clients fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/ClientIdentity'
+    archivedById:
+      get:
+        summary: Get an archived client by ID
+        description: Retrieve detailed information about a specific archived client.
+        tags:
+          - Client
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Archived client details fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/ClientDetail'
+  /v1/client/archived:
+    get:
+      summary: Get archived clients
+      description: Retrieve a list of soft-deleted clients.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Archived clients fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ClientIdentity'
+  /v1/client/archived/{id}:
+    get:
+      summary: Get an archived client by ID
+      description: Retrieve detailed information about a specific archived client.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archived client details fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientDetail'
+  /v1/client/{id}:
+    get:
+      summary: Get a client by ID
+      description: Retrieve detailed information about a specific client including their addresses.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: UUID of the client
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Client fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientDetail'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a client
+      description: Update client basic identity information like name, phone, and email.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: UUID of the client to update
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientIdentity'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a client
+      description: Performs a soft-delete on the client, setting `isDeleted` to true.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: UUID of the client to delete
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '204':
+          description: Client deleted successfully (No Content)
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    archivedOrders:
+      get:
+        summary: Get archived orders for a client
+        description: Retrieve soft-deleted orders associated with a specific client.
+        tags:
+          - Client
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Archived orders fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Order'
+  /v1/client/{id}/orders/archived:
+    get:
+      summary: Get archived orders for a client
+      description: Retrieve soft-deleted orders associated with a specific client.
+      tags:
+        - Client
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archived orders fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+  /v1/client/{clientId}/addresses:
+    get:
+      summary: Get all addresses for a client
+      description: Retrieve a list of all active addresses associated with a specific client.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+          description: UUID of the client
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Addresses fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ClientAddress'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new address for a client
+      description: Add a new physical address to a client's profile.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+          description: UUID of the client
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreateRequest'
+      responses:
+        '201':
+          description: Address created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientAddress'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    archived:
+      get:
+        summary: Get archived addresses for a client
+        description: Retrieve soft-deleted addresses for a specific client.
+        tags:
+          - Client Address
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: clientId
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: Archived addresses fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/ClientAddress'
+    globalArchived:
+      get:
+        summary: Get ALL archived addresses
+        description: Retrieve a global list of all soft-deleted addresses in the system.
+        tags:
+          - Client Address
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: Global archived addresses fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/ClientAddress'
+  /v1/client/{clientId}/addresses/archived:
+    get:
+      summary: Get archived addresses for a client
+      description: Retrieve soft-deleted addresses for a specific client.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archived addresses fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ClientAddress'
+  /v1/addresses/archived:
+    get:
+      summary: Get ALL archived addresses
+      description: Retrieve a global list of all soft-deleted addresses in the system.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Global archived addresses fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ClientAddress'
+  /v1/addresses/{id}:
+    patch:
+      summary: Update an address
+      description: Update specific fields of an existing address.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the address to update
+          example: 7bc5da2d-9b43-4107-9543-0a4836661d51
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressUpdateRequest'
+      responses:
+        '200':
+          description: Address updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClientAddress'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft delete an address
+      description: Mark an address as deleted without removing it from the database.
+      tags:
+        - Client Address
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the address to delete
+          example: 7bc5da2d-9b43-4107-9543-0a4836661d51
+      responses:
+        '204':
+          description: Address deleted successfully (No Content)
+        '404':
+          description: Address not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver:
+    post:
+      summary: Create a new Driver
+      description: Adds a new driver to the system with basic identity information.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateDriverRequest'
+      responses:
+        '201':
+          description: Driver created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Email or Phone or nationalId na already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all drivers
+      description: Retrieve a paginated list of drivers with search and filtering options.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, email, or phone or userName,adress,nationaltyid,goseNumber
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+      responses:
+        '200':
+          description: drivers fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DriverIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+    me:
+      get:
+        summary: Get current driver info
+        description: Retrieve the currently authenticated driver's profile.
+        tags:
+          - Driver
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: Driver info retrieved successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/DriverIdentity'
+          '401':
+            description: Unauthorized - Authentication required
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    archived:
+      get:
+        summary: Get archived drivers
+        description: Retrieve a paginated list of soft-deleted drivers.
+        tags:
+          - Driver
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: query
+            name: page
+            schema:
+              type: integer
+              default: 1
+            example: 1
+            description: Page number to retrieve
+          - in: query
+            name: limit
+            schema:
+              type: integer
+              default: 10
+            example: 10
+            description: Number of items per page
+          - in: query
+            name: search
+            schema:
+              type: string
+            example: Slash
+            description: Search term for name, email, phone, or userName, address, nationality, or gosiNumber
+          - in: query
+            name: sort
+            schema:
+              type: string
+              default: '-createdAt'
+            example: '-createdAt,name'
+            description: |
+              Sort results by fields.
+              - **Ascending:** `field` (e.g., `name`).
+              - **Descending:** `-field` (e.g., `-createdAt`).
+              - **Multi-sort:** `field1,field2`
+          - in: query
+            name: isActive
+            schema:
+              type: boolean
+            example: true
+            description: Filter by activity status
+        responses:
+          '200':
+            description: archived drivers fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/DriverIdentity'
+                            meta:
+                              $ref: '#/components/schemas/PaginationMeta'
+    archivedById:
+      get:
+        summary: Get archived driver by ID
+        description: Retrieve a soft-deleted driver by their ID.
+        tags:
+          - Driver
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: Driver ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: Archived driver fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          $ref: '#/components/schemas/DriverIdentity'
+          '404':
+            description: Driver not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    archivedDriverStatusById:
+      get:
+        summary: Get archived driver status history by driver ID
+        description: Retrieve archived driver status history records for a specific driver.
+        tags:
+          - Driver
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: Driver ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '200':
+            description: Archived driver status history fetched successfully
+            content:
+              application/json:
+                schema:
+                  allOf:
+                    - $ref: '#/components/schemas/SuccessResponse'
+                    - type: object
+                      properties:
+                        data:
+                          type: object
+                          properties:
+                            data:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/DriverStatusHistory'
+                            meta:
+                              $ref: '#/components/schemas/PaginationMeta'
+          '404':
+            description: Driver not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+    deleteDriverStatusHistory:
+      delete:
+        summary: Soft delete a driver status history record
+        description: Soft delete a specific driver status history entry.
+        tags:
+          - Driver
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: Driver status history ID (UUID)
+            example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        responses:
+          '204':
+            description: Driver status history deleted successfully
+          '404':
+            description: Driver status history not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver/me:
+    get:
+      summary: Get current driver info
+      description: Retrieve the currently authenticated driver's profile.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Driver info retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver/archived:
+    get:
+      summary: Get archived drivers
+      description: Retrieve a paginated list of soft-deleted drivers.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          example: 1
+          description: Page number to retrieve
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          example: 10
+          description: Number of items per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          example: Slash
+          description: Search term for name, email, phone, or userName, address, nationality, or gosiNumber
+        - in: query
+          name: sort
+          schema:
+            type: string
+            default: '-createdAt'
+          example: '-createdAt,name'
+          description: |
+            Sort results by fields.
+            - **Ascending:** `field` (e.g., `name`).
+            - **Descending:** `-field` (e.g., `-createdAt`).
+            - **Multi-sort:** `field1,field2`
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+          example: true
+          description: Filter by activity status
+      responses:
+        '200':
+          description: archived drivers fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DriverIdentity'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+  /v1/driver/archived/{id}:
+    get:
+      summary: Get archived driver by ID
+      description: Retrieve a soft-deleted driver by their ID.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Archived driver fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver/archived/driverStatus/{id}:
+    get:
+      summary: Get archived driver status history by driver ID
+      description: Retrieve archived driver status history records for a specific driver.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Archived driver status history fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DriverStatusHistory'
+                          meta:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver/driverStatus/{id}:
+    delete:
+      summary: Soft delete a driver status history record
+      description: Soft delete a specific driver status history entry.
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver status history ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '204':
+          description: Driver status history deleted successfully
+        '404':
+          description: Driver status history not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/driver/{id}:
+    get:
+      summary: Get driver by ID
+      description: Retrieve a specific driver by their ID
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Driver fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update driver
+      description: Update driver information (requires authentication)
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateDriverRequest'
+      responses:
+        '200':
+          description: driver updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Soft delete Driver
+      description: Mark a Driver as deleted (soft delete)
+      tags:
+        - Driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Driver ID (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+      responses:
+        '200':
+          description: Driver deleted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverIdentity'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/orders:
+    get:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Get all active orders
+      description: Retrieves a list of orders with support for search (shipmentNumber, recipientName, recipientPhone), filtering (status, clientId, tripId), sorting, and pagination.
+      parameters:
+        - name: search
+          in: query
+          description: Search term for shipmentNumber, recipientName, or recipientPhone
+          schema:
+            type: string
+          example: SHIP-123
+        - name: currentStatus
+          in: query
+          description: Filter by order status
+          schema:
+            type: string
+            enum:
+              - Created
+              - Assigned
+              - InTransit
+              - Delivered
+              - Returned
+              - Cancelled
+        - name: clientId
+          in: query
+          description: Filter by client ID
+          schema:
+            type: string
+            format: uuid
+        - name: tripId
+          in: query
+          description: Filter by trip ID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: '-createdAt'
+      responses:
+        '200':
+          description: List of orders fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Order'
+                          pagination:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Create a new order
+      description: Creates a new order with optional nested delivery address creation in MongoDB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/orders/{id}:
+    get:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Get order details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Soft delete an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Order deleted successfully
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/orders/{id}/status:
+    patch:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Update order status
+      description: Increments trip counters based on status (InTransit, Delivered, Returned). Records status history automatically.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/orders/{id}/transfer:
+    patch:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Transfer order to another trip
+      description: Resets status to Assigned and preserves archive for previous trip.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferOrderRequest'
+      responses:
+        '200':
+          description: Transferred successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/orders/archived:
+    get:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: []
+      summary: Get archived orders
+      description: Retrieve a list of soft-deleted orders.
+      responses:
+        '200':
+          description: List of archived orders
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+  /v1/trip:
+    get:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Get all active trips
+      description: Retrieves a list of trips with support for search, filtering, sorting, and pagination.
+      parameters:
+        - name: search
+          in: query
+          description: Search term for carId, driverId, startTime, collectedCount, or status
+          schema:
+            type: string
+          example: InProgress
+        - name: status
+          in: query
+          description: Filter by trip status
+          schema:
+            type: string
+            enum:
+              - Scheduled
+              - InProgress
+              - Completed
+              - Cancelled
+        - name: driverId
+          in: query
+          description: Filter by driver ID
+          schema:
+            type: string
+            format: uuid
+        - name: carId
+          in: query
+          description: Filter by car ID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: '-createdAt'
+      responses:
+        '200':
+          description: List of trips fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Trip'
+                          pagination:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/trip/archived:
+    get:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Get archived trips
+      description: Retrieve a paginated list of soft-deleted trips.
+      parameters:
+        - name: search
+          in: query
+          description: Search term for carId, driverId, startTime, collectedCount, or status
+          schema:
+            type: string
+          example: Completed
+        - name: status
+          in: query
+          description: Filter by trip status
+          schema:
+            type: string
+            enum:
+              - Scheduled
+              - InProgress
+              - Completed
+              - Cancelled
+        - name: driverId
+          in: query
+          description: Filter by driver ID
+          schema:
+            type: string
+            format: uuid
+        - name: carId
+          in: query
+          description: Filter by car ID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: '-createdAt'
+      responses:
+        '200':
+          description: Archived trips fetched successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Trip'
+                          pagination:
+                            $ref: '#/components/schemas/PaginationMeta'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/trip/archived/{id}:
+    get:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Get archived trip by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Archived trip details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Trip'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Create a new trip
+      description: Creates a trip and assigns selected active driver and car.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '201':
+          description: Trip created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/trip/{id}:
+    get:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Get trip details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Trip details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Trip'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Update trip by ID
+      description: Updates trip fields, and can reassign driver/car or close/cancel the trip.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTripRequest'
+      responses:
+        '200':
+          description: Trip updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags:
+        - Trip
+      security:
+        - bearerAuth: []
+      summary: Soft delete a trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Trip deleted successfully
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /api/v1/trip/{id}/reports:
+    get:
+      tags:
+        - Trip Reports
+      summary: Generate Trip Manifest Report
+      description: Generates a professional HTML trip manifest report and returns its public URL.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            default: dd155f62-b4d9-4ae1-871c-7dd90e708127
+          description: The ID of the trip to generate the report for.
+      responses:
+        '200':
+          description: Successfully generated report.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          reportUrl:
+                            type: string
+                            example: http://localhost:3000/public/uploads/trip-reports/trip-manifest-TRIP-REAL-1778013953360-1778064590380.html
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /api/v1/trip/{id}/reports/client/{clientId}:
+    get:
+      tags:
+        - Trip Reports
+      summary: Generate Trip Manifest Report for a specific Client
+      description: Generates an HTML trip manifest report filtered for a specific client within the trip.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            default: dd155f62-b4d9-4ae1-871c-7dd90e708127
+          description: The ID of the trip.
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+            format: uuid
+            default: f70ce17b-649e-4cb8-a34e-d18f93d42730
+          description: The ID of the client to filter by.
+      responses:
+        '200':
+          description: Successfully generated report.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          reportUrl:
+                            type: string
+                            example: http://localhost:3000/public/uploads/trip-reports/trip-manifest-TRIP-REAL-1778013953360-1778064590380.html
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/reports/driver/{id}/daily:
+    get:
+      summary: Generate driver daily report (PDF)
+      description: |
+        Generates a PDF report for a specific driver on a given date.
+        The report includes trip details (trip number, plate, total orders, delivered, not delivered, status)
+        and overall stats (total trips, total orders, delivered, returned).
+        Returns a URL to download the generated PDF file.
+      tags:
+        - Driver Reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Driver ID (UUID)
+          example: 05b0565b-893e-47a5-b0d6-512851800825
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+            pattern: ^\d{4}-\d{2}-\d{2}$
+            example: '2026-05-07'
+          description: |
+            Date to generate the report for (YYYY-MM-DD).
+            Defaults to today's date if not provided.
+      responses:
+        '200':
+          description: Driver report generated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DriverReportResponse'
+        '400':
+          description: Invalid date format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Driver not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    AuthIdentity:
+      type: object
+      properties:
+        userName:
+          type: string
+          description: The unique personal name for user
+          example: user_12345
+          default: user_12345
+        email:
+          type: string
+          description: Primary contact email address
+          example: contact@megalogistics.sa
+          default: contact@megalogistics.sa
+        phone:
+          type: string
+          description: Contact phone number
+          example: '0566778899'
+          default: '0566778899'
+        password:
+          type: string
+          description: password of user
+          example: '12345678'
+          default: '12345678'
+    LoginRequest:
+      type: object
+      required:
+        - userName
+        - phone
+        - password
+      properties:
+        userName:
+          type: string
+          example: user_12345
+          default: mohamed_slash
+        email:
+          type: string
+          example: contact@megalogistics.sa
+          default: contact@megalogistics.sa
+        phone:
+          type: string
+          example: '0566778899'
+          default: '+966512345678'
+        password:
+          type: string
+          minLength: 8
+          example: password123
+          default: password123
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthIdentity'
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    DashboardSummary:
+      type: object
+      properties:
+        stats:
+          type: object
+          properties:
+            clients:
+              type: integer
+            orders:
+              type: integer
+            trips:
+              type: integer
+            cars:
+              type: integer
+            drivers:
+              type: integer
+        alerts:
+          type: object
+          properties:
+            expiringCars:
+              type: array
+              items:
+                type: object
+            expiringDrivers:
+              type: array
+              items:
+                type: object
+            upcomingMaint:
+              type: array
+              items:
+                type: object
+        activeTrips:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              tripNumber:
+                type: string
+              title:
+                type: string
+              progress:
+                type: integer
+        accountSecurity:
+          type: object
+          properties:
+            lastLogin:
+              type: string
+              format: date-time
+            requestMeta:
+              type: object
+    BranchDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 831d6976-9e99-4a45-9a49-76ad2675af49
+        name:
+          type: string
+          default: Riyadh Main Branch
+          example: Riyadh Main Branch
+        email:
+          type: string
+          default: riyadh.branch@slash.com
+          example: riyadh.branch@slash.com
+        phone:
+          type: string
+          default: '0500000001'
+          example: '0500000001'
+        country:
+          type: string
+          default: SA
+          example: SA
+        city:
+          type: string
+          default: Riyadh
+          example: Riyadh
+        state:
+          type: string
+          nullable: true
+          default: Riyadh Region
+          example: Riyadh Region
+        district:
+          type: string
+          default: Al-Olaya
+          example: Al-Olaya
+        street:
+          type: string
+          default: King Fahd St
+          example: King Fahd St
+        buildingNo:
+          type: string
+          nullable: true
+          default: '123'
+          example: '123'
+        unitNo:
+          type: string
+          nullable: true
+          default: '10'
+          example: '10'
+        zipCode:
+          type: string
+          nullable: true
+          default: '12345'
+          example: '12345'
+        latitude:
+          type: number
+          default: 24.7136
+          example: 24.7136
+        longitude:
+          type: number
+          default: 46.6753
+          example: 46.6753
+        isActive:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateBranchRequest:
+      type: object
+      required:
+        - name
+        - email
+        - city
+        - street
+      properties:
+        name:
+          type: string
+          default: Riyadh Main Branch
+          example: Riyadh Main Branch
+        email:
+          type: string
+          default: riyadh.branch@slash.com
+          example: riyadh.branch@slash.com
+        phone:
+          type: string
+          default: '0500000001'
+          example: '0500000001'
+        country:
+          type: string
+          default: SA
+          example: SA
+        city:
+          type: string
+          default: Riyadh
+          example: Riyadh
+        state:
+          type: string
+          default: Riyadh Region
+          example: Riyadh Region
+        district:
+          type: string
+          default: Al-Olaya
+          example: Al-Olaya
+        street:
+          type: string
+          default: King Fahd St
+          example: King Fahd St
+        buildingNo:
+          type: string
+          default: '123'
+          example: '123'
+        unitNo:
+          type: string
+          default: '10'
+          example: '10'
+        zipCode:
+          type: string
+          default: '12222'
+          example: '12222'
+        latitude:
+          type: number
+          default: 24.7136
+          example: 24.7136
+        longitude:
+          type: number
+          default: 46.6753
+          example: 46.6753
+    UpdateBranchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Riyadh Branch
+        email:
+          type: string
+          example: updated.riyadh@slash.com
+        phone:
+          type: string
+          example: '0555555555'
+        city:
+          type: string
+          example: Jeddah
+        street:
+          type: string
+          example: Tahlia St
+        isActive:
+          type: boolean
+          default: true
+          example: true
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 100
+          description: Total number of records found
+        page:
+          type: integer
+          example: 1
+          description: Current page number
+        limit:
+          type: integer
+          example: 10
+          description: Number of records per page
+        totalPages:
+          type: integer
+          example: 10
+          description: Total number of pages available
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: An error occurred
+        responseAt:
+          type: string
+          format: date-time
+          example: '2026-04-21T12:00:00.000Z'
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: validation_failed
+            path:
+              type: string
+              example: /api/v1/resource
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  code:
+                    type: string
+    ClientIdentity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the client (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        name:
+          type: string
+          description: The legal name or identifier of the client
+          example: Mega Logistics Global
+        email:
+          type: string
+          description: Primary contact email address
+          example: contact@megalogistics.sa
+        phone:
+          type: string
+          description: Contact phone number
+          example: '0566778899'
+        isActive:
+          type: boolean
+          description: Status indicating if the client is currently active
+          example: true
+        isDeleted:
+          type: boolean
+          description: Soft-delete flag
+          example: false
+        clientType:
+          type: string
+          enum:
+            - Individual
+            - Corporate
+          description: Category of the client
+          example: Corporate
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of record creation
+          example: '2026-04-16T12:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of the last update
+          example: '2026-04-16T12:30:00.000Z'
+    ClientDetail:
+      allOf:
+        - $ref: '#/components/schemas/ClientIdentity'
+        - type: object
+          properties:
+            addresses:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClientAddress'
+              description: List of physical/mailing addresses (Only returned in Detail views)
+    CreateClientRequest:
+      type: object
+      required:
+        - name
+        - phone
+        - email
+      properties:
+        name:
+          type: string
+          description: Full name or Company name
+          example: Slash Logistics
+          default: Slash Logistics
+        email:
+          type: string
+          description: Unique email for the client
+          example: owner@slash.sa
+          default: owner@slash.sa
+        phone:
+          type: string
+          description: Mobile number
+          example: '0501112223'
+          default: '0501112223'
+        clientType:
+          type: string
+          enum:
+            - Individual
+            - Corporate
+          description: Type of client entity
+          example: Corporate
+          default: Corporate
+    UpdateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Slash Logistics Inc.
+          default: Slash Logistics Inc.
+        email:
+          type: string
+          example: ceo@slash.sa
+          default: ceo@slash.sa
+        phone:
+          type: string
+          example: '0509998877'
+          default: '0509998877'
+        clientType:
+          type: string
+          enum:
+            - Individual
+            - Corporate
+          example: Corporate
+          default: Corporate
+        isActive:
+          type: boolean
+          description: Status indicating if the client is active
+          example: true
+          default: true
+    ClientAddress:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 69e4c4030645903f39c197ae
+        clientId:
+          type: string
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        branchName:
+          type: string
+          nullable: true
+          default: Main Branch
+          example: Main Branch
+        label:
+          type: string
+          default: Warehouse
+          example: Warehouse
+        contactPerson:
+          type: object
+          properties:
+            name:
+              type: string
+              default: Mahmoud Ahmed
+              example: Mahmoud Ahmed
+            phone:
+              type: string
+              default: '0512345678'
+              example: '0512345678'
+        details:
+          type: object
+          properties:
+            country:
+              type: string
+              default: SA
+              example: SA
+            city:
+              type: string
+              default: Riyadh
+              example: Riyadh
+            state:
+              type: string
+              default: Riyadh Region
+              example: Riyadh Region
+            district:
+              type: string
+              default: Al Malqa
+              example: Al Malqa
+            street:
+              type: string
+              default: King Salman Rd
+              example: King Salman Rd
+            buildingNo:
+              type: string
+              default: '123'
+              example: '123'
+            unitNo:
+              type: string
+              default: '10'
+              example: '10'
+            zipCode:
+              type: string
+              default: '13521'
+              example: '13521'
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - Point
+              default: Point
+              example: Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              default:
+                - 46.6753
+                - 24.7136
+              example:
+                - 46.6753
+                - 24.7136
+        isValidated:
+          type: boolean
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AddressCreateRequest:
+      type: object
+      required:
+        - details
+        - location
+      properties:
+        branchName:
+          type: string
+          nullable: true
+          default: Main Branch
+          example: Main Branch
+        label:
+          type: string
+          default: General
+          example: General
+        contactPerson:
+          type: object
+          properties:
+            name:
+              type: string
+              default: Mahmoud Ahmed
+              example: Mahmoud Ahmed
+            phone:
+              type: string
+              default: '0512345678'
+              example: '0512345678'
+        details:
+          type: object
+          required:
+            - city
+            - street
+          properties:
+            country:
+              type: string
+              default: SA
+              example: SA
+            city:
+              type: string
+              default: Riyadh
+              example: Riyadh
+            state:
+              type: string
+              default: Riyadh Region
+              example: Riyadh Region
+            district:
+              type: string
+              default: Al Malqa
+              example: Al Malqa
+            street:
+              type: string
+              default: King Salman Rd
+              example: King Salman Rd
+            buildingNo:
+              type: string
+              default: '123'
+              example: '123'
+            zipCode:
+              type: string
+              default: '13521'
+              example: '13521'
+        location:
+          type: object
+          required:
+            - coordinates
+          properties:
+            coordinates:
+              type: array
+              items:
+                type: number
+              default:
+                - 46.6753
+                - 24.7136
+              example:
+                - 46.6753
+                - 24.7136
+    AddressUpdateRequest:
+      type: object
+      properties:
+        branchName:
+          type: string
+          nullable: true
+          default: Updated Branch
+          example: Updated Branch
+        label:
+          type: string
+          default: Office
+          example: Office
+        contactPerson:
+          type: object
+          properties:
+            name:
+              type: string
+              default: Mahmoud Ahmed
+              example: Mahmoud Ahmed
+            phone:
+              type: string
+              default: '0512345678'
+              example: '0512345678'
+        details:
+          type: object
+          properties:
+            country:
+              type: string
+              default: SA
+            city:
+              type: string
+              default: Jeddah
+            state:
+              type: string
+              default: Makkah Region
+            district:
+              type: string
+              default: Al Rawdah
+            street:
+              type: string
+              default: Tahlia St
+            buildingNo:
+              type: string
+              default: '456'
+            zipCode:
+              type: string
+              default: '23432'
+        location:
+          type: object
+          properties:
+            coordinates:
+              type: array
+              items:
+                type: number
+              default:
+                - 39.1925
+                - 21.5433
+              example:
+                - 39.1925
+                - 21.5433
+    Car:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        manufacturer:
+          type: string
+          default: Toyota
+          example: Toyota
+        model:
+          type: string
+          default: Camry
+          example: Camry
+        year:
+          type: integer
+          default: 2023
+          example: 2023
+        color:
+          type: string
+          nullable: true
+          default: White
+          example: Blue
+        plateNumber:
+          type: string
+          default: '1234'
+          example: '1234'
+        plateLetters:
+          type: string
+          default: ح ب ا
+          example: ح ب ا
+        plateType:
+          type: string
+          nullable: true
+          default: نقل خاص
+          example: نقل خاص
+        registrationNumber:
+          type: string
+          default: '1020304050'
+          example: '1020304050'
+        vinNumber:
+          type: string
+          default: VIN123456789
+          example: ABC123456789XYZ
+        ownerNationalId:
+          type: string
+          nullable: true
+          default: '1055667788'
+          example: '1055667788'
+        branchId:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440001
+          example: 550e8400-e29b-41d4-a716-446655440001
+        actualUserId:
+          type: string
+          nullable: true
+          default: null
+          example: 8b178220-413e-11ee-be56-0242ac120002
+        actualUserStartDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2023-10-01T10:00:00Z'
+        ownershipStartDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2023-01-15T08:30:00Z'
+        registrationIssueDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2023-01-20T00:00:00Z'
+        registrationExpiryDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2026-01-20T23:59:59Z'
+        registrationPhoto:
+          type: string
+          format: uri
+          nullable: true
+          default: null
+          example: https://example.com/photos/reg_car1.jpg
+        insuranceStatus:
+          type: string
+          default: Valid
+          example: Valid
+        insuranceExpiryDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2024-12-31T23:59:59Z'
+        insurancePhoto:
+          type: string
+          format: uri
+          nullable: true
+          default: null
+          example: https://example.com/photos/ins_car1.jpg
+        inspectionStatus:
+          type: string
+          nullable: true
+          default: Valid
+          example: Valid
+        inspectionExpiryDate:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2024-06-30T23:59:59Z'
+        operationCardNumber:
+          type: string
+          nullable: true
+          default: null
+          example: OPC12345678
+        operationCardExpiry:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2025-05-15T23:59:59Z'
+        gpsDeviceId:
+          type: string
+          nullable: true
+          default: null
+          example: GPS-X100
+        currentStatus:
+          type: string
+          default: Active
+          example: Active
+        currentImpoundStatus:
+          type: string
+          default: None
+          nullable: true
+          example: None
+        capacity:
+          type: integer
+          nullable: true
+          default: 5
+          example: 5
+        weight:
+          type: integer
+          nullable: true
+          default: 1500
+          example: 1500
+        isActive:
+          type: boolean
+          default: true
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2023-10-19T12:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2023-10-19T14:30:00Z'
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarStatusHistory'
+    CreateCarRequest:
+      type: object
+      required:
+        - manufacturer
+        - model
+        - year
+        - plateNumber
+        - plateLetters
+        - registrationNumber
+        - vinNumber
+        - branchId
+      properties:
+        manufacturer:
+          type: string
+          default: Toyota
+          example: Toyota
+        model:
+          type: string
+          default: Camry
+          example: Camry
+        year:
+          type: integer
+          default: 2023
+          example: 2023
+        color:
+          type: string
+          default: White
+          example: Silver
+        plateNumber:
+          type: string
+          default: '1234'
+          example: '5678'
+        plateLetters:
+          type: string
+          default: ح ب ا
+          example: ط ر ق
+        plateType:
+          type: string
+          default: نقل خاص
+          example: نقل عام
+        registrationNumber:
+          type: string
+          default: '1020304050'
+          example: '2030405060'
+        vinNumber:
+          type: string
+          default: VIN123456789
+          example: VIN9876543210ZYX
+        ownerNationalId:
+          type: string
+          default: '1055667788'
+          example: '1098765432'
+        branchId:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440001
+          example: 550e8400-e29b-41d4-a716-446655440001
+        actualUserId:
+          type: string
+          format: uuid
+          default: null
+          example: 8b178220-413e-11ee-be56-0242ac120002
+        actualUserStartDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2023-10-01T00:00:00Z'
+        ownershipStartDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2022-05-10T00:00:00Z'
+        registrationIssueDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2022-05-11T00:00:00Z'
+        registrationExpiryDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2025-05-10T23:59:59Z'
+        registrationPhoto:
+          type: string
+          format: uri
+          default: null
+          example: https://example.com/photos/reg_car1.jpg
+        insuranceStatus:
+          type: string
+          default: Valid
+          example: Valid
+        insuranceExpiryDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2024-12-31T23:59:59Z'
+        insurancePhoto:
+          type: string
+          format: uri
+          default: null
+          example: https://example.com/photos/ins_car1.jpg
+        inspectionStatus:
+          type: string
+          default: Valid
+          example: Passed
+        inspectionExpiryDate:
+          type: string
+          format: date-time
+          default: null
+          example: '2024-10-15T23:59:59Z'
+        operationCardNumber:
+          type: string
+          default: null
+          example: OPC998877
+        operationCardExpiry:
+          type: string
+          format: date-time
+          default: null
+          example: '2025-10-15T23:59:59Z'
+        gpsDeviceId:
+          type: string
+          default: null
+          example: GPS-MOD-1
+        currentStatus:
+          type: string
+          default: Active
+          example: Active
+        currentImpoundStatus:
+          type: string
+          default: None
+          example: None
+        capacity:
+          type: integer
+          default: 5
+          example: 4
+        weight:
+          type: integer
+          default: 2500
+          example: 1800
+    UpdateCarRequest:
+      type: object
+      properties:
+        manufacturer:
+          type: string
+          default: Toyota
+          example: Toyota
+        model:
+          type: string
+          default: Corolla
+          example: Corolla
+        year:
+          type: integer
+          default: 2022
+          example: 2022
+        color:
+          type: string
+          default: Black
+          example: Black
+        plateNumber:
+          type: string
+          default: '4321'
+          example: '4321'
+        plateLetters:
+          type: string
+          default: س ف ن
+          example: س ف ن
+        plateType:
+          type: string
+          default: خاص
+          example: خاص
+        registrationNumber:
+          type: string
+          default: '3040506070'
+          example: '3040506070'
+        vinNumber:
+          type: string
+          default: VIN665544332211
+          example: VIN665544332211
+        ownerNationalId:
+          type: string
+          default: '1077889900'
+          example: '1077889900'
+        branchId:
+          type: string
+          format: uuid
+          default: 550e8400-e29b-41d4-a716-446655440001
+          example: 550e8400-e29b-41d4-a716-446655440001
+        actualUserId:
+          type: string
+          format: uuid
+          default: null
+          example: 8b178220-413e-11ee-be56-0242ac120002
+        actualUserStartDate:
+          type: string
+          format: date-time
+          default: null
+        ownershipStartDate:
+          type: string
+          format: date-time
+          default: null
+        registrationIssueDate:
+          type: string
+          format: date-time
+          default: null
+        registrationExpiryDate:
+          type: string
+          format: date-time
+          default: null
+        registrationPhoto:
+          type: string
+          format: uri
+          default: null
+        insuranceStatus:
+          type: string
+          default: Valid
+          example: Expired
+        insuranceExpiryDate:
+          type: string
+          format: date-time
+          default: null
+        insurancePhoto:
+          type: string
+          format: uri
+          default: null
+        inspectionStatus:
+          type: string
+          default: Valid
+          example: Expired
+        inspectionExpiryDate:
+          type: string
+          format: date-time
+          default: null
+        operationCardNumber:
+          type: string
+          default: null
+        operationCardExpiry:
+          type: string
+          format: date-time
+          default: null
+        gpsDeviceId:
+          type: string
+          default: null
+        currentStatus:
+          type: string
+          default: Active
+          example: InMaintenance
+        currentImpoundStatus:
+          type: string
+          default: None
+          example: Impounded
+        capacity:
+          type: integer
+          default: 5
+          example: 2
+        weight:
+          type: integer
+          default: 2500
+          example: 3000
+        isActive:
+          type: boolean
+          default: true
+          example: false
+    CarStatusHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440008
+        carId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        statusType:
+          type: string
+          description: Type of status being tracked (e.g., General, Impound)
+          default: General
+          example: General
+        oldStatus:
+          type: string
+          nullable: true
+          default: null
+          example: Active
+        newStatus:
+          type: string
+          default: Active
+          example: InMaintenance
+        changeReason:
+          type: string
+          nullable: true
+          default: null
+          example: Scheduled maintenance check
+        changedAt:
+          type: string
+          format: date-time
+          default: null
+          example: '2023-10-19T15:00:00Z'
+    CarImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        carId:
+          type: string
+          format: uuid
+          example: 6afa2cc7-6f64-4fd6-885e-aa374d076d3a
+        image:
+          type: string
+          description: Filename of the uploaded image
+          example: images-1714824000.jpg
+        url:
+          type: string
+          description: Full accessible URL of the image
+          example: http://localhost:3000/public/uploads/car-photos/images-1714824000.jpg
+        publicId:
+          type: string
+          description: Unique identifier for the image (used for deletion)
+          example: images-1714824000.jpg
+        stage:
+          type: string
+          enum:
+            - BEFORE
+            - AFTER
+            - GENERAL
+          example: BEFORE
+        maintenanceId:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+    AddCarImagesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: images_added_successfully
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarImage'
+    UserIdentity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the user (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        name:
+          type: string
+          description: The legal name or identifier of the user
+          example: Mega Logistics Global
+          default: Mega Logistics Global
+        userName:
+          type: string
+          description: The unique personal name for user
+          example: user_12345
+          default: user_12345
+        email:
+          type: string
+          description: Primary contact email address
+          example: contact@megalogistics.sa
+          default: contact@megalogistics.sa
+        phone:
+          type: string
+          description: Contact phone number
+          example: '0566778899'
+          default: '0566778899'
+        photo:
+          type: string
+          description: user photo
+          example: https://photo.gpg
+          default: https://photo.gpg
+        isActive:
+          type: boolean
+          description: Status indicating if the User is currently active
+          example: true
+          default: true
+        isDeleted:
+          type: boolean
+          description: Soft-delete flag
+          example: false
+          default: false
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of record creation
+          example: '2026-04-16T12:00:00.000Z'
+          default: '2026-04-16T12:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of the last update
+          example: '2026-04-16T12:30:00.000Z'
+          default: '2026-04-16T12:30:00.000Z'
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - phone
+        - email
+      properties:
+        name:
+          type: string
+          description: Full name or User name
+          example: Slash Logistics Manger
+          default: Slash Logistics Manger
+        email:
+          type: string
+          description: Unique email for the user
+          example: manger@slash.sa
+          default: manger@slash.sa
+        phone:
+          type: string
+          description: Mobile number
+          example: '+966512345678'
+          default: '+966512345678'
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Slash Logistics Inc.
+          default: Slash Logistics Inc.
+        phone:
+          type: string
+          example: '+966512345678'
+          default: '+966512345678'
+        email:
+          type: string
+          example: ceo@slash.sa
+          default: ceo@slash.sa
+        photo:
+          type: string
+          example: https://photo.jpg
+          default: https://photo.jpg
+        isActive:
+          type: boolean
+          example: true
+    UserListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: users fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            users:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UserIdentity'
+                meta:
+                  $ref: '#/components/schemas/PaginationMeta'
+    UserDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: user fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserIdentity'
+    UserUpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: users.update_successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserIdentity'
+    UserDeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: users.delete_successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserIdentity'
+          default: true
+    RoleIdentity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the Role (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        name:
+          type: string
+          description: The legal name or identifier of the role
+          example: Head Manger
+        description:
+          type: string
+          description: Descrip This role
+          example: Mange Users
+        isActive:
+          type: boolean
+          description: Status indicating if the role is currently active
+          example: true
+        isDeleted:
+          type: boolean
+          description: Soft-delete flag
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of record creation
+          example: '2026-04-16T12:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of the last update
+          example: '2026-04-16T12:30:00.000Z'
+    CreateRoleRequest:
+      type: object
+      required:
+        - name
+        - description
+        - permissions
+      properties:
+        name:
+          type: string
+          description: Role name
+          example: Head Manger
+          default: Head Manger
+        description:
+          type: string
+          description: Role description
+          example: Mange Company
+          default: Mange Company
+        permissions:
+          type: array
+          description: Permission Of This Role
+          example: '[create , update]'
+          default: '[]'
+    UpdateRoleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Role name
+          example: Head Manger
+          default: Head Manger
+        description:
+          type: string
+          description: Role description
+          example: Mange Company
+          default: Mange Company
+        permissions:
+          type: array
+          description: Permission Of This Role
+          example: '[create , update]'
+          default: '[]'
+        isActive:
+          type: boolean
+          example: true
+    RoleListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Role fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            users:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/RoleIdentity'
+                meta:
+                  $ref: '#/components/schemas/PaginationMeta'
+    RoleUpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Role.update_successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/RoleIdentity'
+    RoleDeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Role.delete_successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/RoleIdentity'
+          default: true
+    MaintenanceRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e9ab8ea8-5176-4270-be66-3bb92d2c3aca
+        carId:
+          type: string
+          format: uuid
+          example: 64650231-e2ba-4991-b8bd-75b9682b4d8c
+        reason:
+          type: string
+          default: صيانة دورية
+          example: تغيير زيت + فحص شامل
+        cost:
+          type: number
+          format: float
+          default: 0
+          example: 900
+        startAt:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2026-04-21T08:00:00.000Z'
+        endAt:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2026-04-21T18:00:00.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-20T15:12:20.346Z'
+    CreateMaintenanceRequest:
+      type: object
+      required:
+        - reason
+        - cost
+      properties:
+        reason:
+          type: string
+          default: صيانة دورية
+          example: تغيير زيت + فحص شامل
+        cost:
+          type: number
+          format: float
+          default: 0
+          example: 750.5
+        startAt:
+          type: string
+          format: date-time
+          default: null
+          example: '2026-04-21T08:00:00.000Z'
+        endAt:
+          type: string
+          format: date-time
+          default: null
+          example: '2026-04-21T18:00:00.000Z'
+    UpdateMaintenanceRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          default: صيانة دورية
+          example: تغيير زيت + فحص شامل + تغيير فلتر هواء
+        cost:
+          type: number
+          format: float
+          default: 0
+          example: 900
+        startAt:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2026-04-21T08:00:00.000Z'
+        endAt:
+          type: string
+          format: date-time
+          nullable: true
+          default: null
+          example: '2026-04-21T20:00:00.000Z'
+    DriverIdentity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the driver (UUID)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        name:
+          type: string
+          description: The legal name or identifier of the driver
+          example: driver on logistics
+          default: driver on logistics
+        userName:
+          type: string
+          description: The unique userName of the driver
+          example: driver_123
+          default: driver_123
+        email:
+          type: string
+          description: Primary contact email address
+          example: driver@megalogistics.sa
+          default: driver@megalogistics.sa
+        phone:
+          type: string
+          description: Contact phone number
+          example: '+966512345678'
+          default: '+966512345678'
+        address:
+          type: string
+          description: driver adress
+          example: Riyadh, Kingdom of Saudi Arabia
+          default: Riyadh, Kingdom of Saudi Arabia
+        nationality:
+          type: string
+          description: driver nationality
+          example: Saudi
+          default: Saudi
+        nationalId:
+          type: string
+          description: driver nationalId
+          example: '123456789123456'
+          default: '123456789123456'
+        nationalIdType:
+          type: string
+          enum:
+            - NationalID
+            - Iqama
+            - Passport
+          description: Category of the nationalIdType
+          example: Passport
+          default: Passport
+        gosiNumber:
+          type: string
+          description: driver gosiNumber
+          example: '123456'
+          default: '123456'
+        licenseNumber:
+          type: string
+          description: number of license for driver
+          example: '1234567899'
+          default: '1234567899'
+        licenseType:
+          type: string
+          description: type of the license for driver
+          example: personal license
+          default: personal license
+        licenseExpiry:
+          type: string
+          description: date end license for driver
+          example: '2026-10-22T00:00:00.000Z'
+          default: '2026-10-22T00:00:00.000Z'
+        photo:
+          type: string
+          description: Stored filename for driver profile photo
+          example: photo-1777977981746-543241427.png
+          default: photo-1777977981746-543241427.png
+        photoUrl:
+          type: string
+          description: Public URL for driver profile photo
+          example: http://localhost:3000/public/uploads/driver-photos/photo-1777977981746-543241427.png
+          default: http://localhost:3000/public/uploads/driver-photos/photo-1777977981746-543241427.png
+        nationalPhoto:
+          type: string
+          description: Stored filename for driver national ID photo
+          example: nationalPhoto-1777977981746-543241427.png
+          default: nationalPhoto-1777977981746-543241427.png
+        nationalPhotoUrl:
+          type: string
+          description: Public URL for driver national ID photo
+          example: http://localhost:3000/public/uploads/driver-photos/nationalPhoto-1777977981746-543241427.png
+          default: http://localhost:3000/public/uploads/driver-photos/nationalPhoto-1777977981746-543241427.png
+        driverCardPhoto:
+          type: string
+          description: Stored filename for driver card photo
+          example: driverCardPhoto-1777977981746-543241427.png
+          default: driverCardPhoto-1777977981746-543241427.png
+        driverCardPhotoUrl:
+          type: string
+          description: Public URL for driver card photo
+          example: http://localhost:3000/public/uploads/driver-photos/driverCardPhoto-1777977981746-543241427.png
+          default: http://localhost:3000/public/uploads/driver-photos/driverCardPhoto-1777977981746-543241427.png
+        driverCardNumber:
+          type: string
+          description: number of personal card
+          example: '123456789123456'
+          default: '123456789123456'
+        driverCardType:
+          type: string
+          enum:
+            - Temporary
+            - Seasonal
+            - Annual
+            - Restricted
+          description: Category of the driverCardType
+          example: Temporary
+          default: Temporary
+        status:
+          type: string
+          enum:
+            - Active
+            - Inactive
+            - InTrip
+            - Suspended
+          description: Category of the driver status
+          example: Active
+          default: Active
+        isActive:
+          type: boolean
+          description: Status indicating if the driver is currently active
+          example: true
+          default: true
+        isDeleted:
+          type: boolean
+          description: Soft-delete flag
+          example: false
+          default: false
+        driverType:
+          type: string
+          description: type of the driver
+          example: transport driver
+          default: transport driver
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of record creation
+          example: '2026-04-16T12:00:00.000Z'
+          default: '2026-04-16T12:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp of the last update
+          example: '2026-04-16T12:30:00.000Z'
+          default: '2026-04-16T12:30:00.000Z'
+    CreateDriverRequest:
+      type: object
+      required:
+        - name
+        - phone
+        - email
+      properties:
+        name:
+          type: string
+          description: Full name or Company name
+          example: Slash Logistics
+          default: Slash Logistics
+        email:
+          type: string
+          description: Unique email for the client
+          example: owner@slash.sa
+          default: owner@slash.sa
+        phone:
+          type: string
+          description: Mobile number
+          example: '0501112223'
+          default: '0501112223'
+        address:
+          type: string
+          description: driver adress
+          example: Riyadh, Kingdom of Saudi Arabia
+          default: Riyadh, Kingdom of Saudi Arabia
+        nationality:
+          type: string
+          description: driver nationality
+          example: ' Saudi '
+          default: Saudi
+        nationalId:
+          type: string
+          description: driver nationalId
+          example: '123456789123456'
+          default: '123456789123456'
+        nationalIdType:
+          type: string
+          enum:
+            - NationalID
+            - Iqama
+            - Passport
+          description: Category of the nationalIdType
+          example: Passport
+          defult: NationalID
+        gosiNumber:
+          type: string
+          description: driver gosiNumber
+          example: '123456'
+          defult: '123456'
+        licenseNumber:
+          type: string
+          description: number of license for driver
+          example: '1234567899'
+          defult: '1234567899'
+        licenseType:
+          type: string
+          description: type of the license for driver
+          example: personal license
+          defult: personal license
+        licenseExpiry:
+          type: string
+          description: date end  license for driver
+          example: '2026-10-22T00:00:00.000Z'
+          defult: '2026-10-22T00:00:00.000Z'
+        photo:
+          type: string
+          format: binary
+          description: Driver profile photo file
+        nationalPhoto:
+          type: string
+          format: binary
+          description: Driver national ID photo file
+        driverCardPhoto:
+          type: string
+          format: binary
+          description: Driver card photo file
+        driverCardNumber:
+          type: string
+          description: number of personal card
+          example: '123456789123456'
+          defult: '123456789123456'
+        driverCardType:
+          type: string
+          enum:
+            - Temporary
+            - Seasonal
+            - Annual
+            - Restricted
+          description: Category of the driverCardType
+          example: Temporary
+          defult: Temporary
+        status:
+          type: string
+          enum:
+            - Active
+            - Inactive
+            - InTrip
+            - Suspended
+          description: Category of the driver status
+          example: Active
+          defult: Active
+    UpdateDriverRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Slash Logistics driver.
+          default: Slash Logistics driver.
+        email:
+          type: string
+          example: driver@slash.sa
+          default: driver@slash.sa
+        phone:
+          type: string
+          example: '0509998877'
+          default: '0509998877'
+        isActive:
+          type: boolean
+          description: Status indicating if the driver is active
+          example: true
+          default: true
+        photo:
+          type: string
+          format: binary
+          description: Driver profile photo file
+        nationalPhoto:
+          type: string
+          format: binary
+          description: Driver national ID photo file
+        driverCardPhoto:
+          type: string
+          format: binary
+          description: Driver card photo file
+    DriverListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: drivers fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            users:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DriverIdentity'
+                meta:
+                  $ref: '#/components/schemas/PaginationMeta'
+    DriverUpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Driver.update_successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            driver:
+              $ref: '#/components/schemas/DriverIdentity'
+    DriverDeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Driver delete successfuly
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            driver:
+              $ref: '#/components/schemas/DriverIdentity'
+          default: true
+    DriverReportResponse:
+      type: object
+      properties:
+        reportUrl:
+          type: string
+          description: Public URL to download the generated PDF report
+          example: http://localhost:3000/public/uploads/driver-reports/driver-report-05b0565b-2026-05-07-1746123456789-123456789.pdf
+          default: http://localhost:3000/public/uploads/driver-reports/driver-report-05b0565b-2026-05-07-1746123456789-123456789.pdf
+        filename:
+          type: string
+          description: Generated PDF filename
+          example: driver-report-05b0565b-893e-47a5-b0d6-512851800825-2026-05-07-1746123456789-123456789.pdf
+          default: driver-report-05b0565b-893e-47a5-b0d6-512851800825-2026-05-07-1746123456789-123456789.pdf
+    TripReportRow:
+      type: object
+      properties:
+        tripNumber:
+          type: string
+          description: Unique trip number
+          example: TRIP-20260507-aa34s
+          default: TRIP-20260507-aa34s
+        plate:
+          type: string
+          description: Car plate (letters + number combined)
+          example: ب د ج 6261
+          default: ب د ج 6261
+        totalOrders:
+          type: integer
+          description: Total number of orders in this trip
+          example: 15
+          default: 15
+        totalDelivered:
+          type: integer
+          description: Number of delivered orders in this trip
+          example: 11
+          default: 11
+        totalNotDelivered:
+          type: integer
+          description: Number of undelivered orders in this trip
+          example: 4
+          default: 4
+        tripStatus:
+          type: string
+          enum:
+            - Scheduled
+            - InProgress
+            - Completed
+            - Cancelled
+            - InTransit
+            - Assigned
+          description: Current status of the trip
+          example: Completed
+          default: Completed
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the order
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        shipmentNumber:
+          type: string
+          description: Unique shipment number/reference
+          example: SHIP-123456789
+          default: SHIP-123456789
+        recipientName:
+          type: string
+          description: Name of the person receiving the shipment
+          example: Ahmed Mohamed Ali
+          default: Ahmed Mohamed Ali
+        recipientPhone:
+          type: string
+          description: Contact phone of the recipient
+          example: '0501112223'
+          default: '0501112223'
+        clientId:
+          type: string
+          format: uuid
+          description: ID of the client who owns the order
+          example: d4bb6f64-6075-470c-9118-9b2b3407b765
+          default: d4bb6f64-6075-470c-9118-9b2b3407b765
+        tripId:
+          type: string
+          format: uuid
+          description: ID of the trip assigned to this order
+          example: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+          default: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+        pickupAddressId:
+          type: string
+          description: MongoDB ID of the pickup address
+          example: 643f1b2c9d3e4b5a6c7d8e9e
+        deliveryAddressId:
+          type: string
+          description: MongoDB ID of the delivery address
+          example: 643f1b2c9d3e4b5a6c7d8e9f
+        currentStatus:
+          type: string
+          enum:
+            - Created
+            - Assigned
+            - InTransit
+            - Delivered
+            - Returned
+            - Cancelled
+          description: Current operational status of the order
+          example: InTransit
+          default: InTransit
+        quantity:
+          type: integer
+          description: Total items or weight units
+          example: 1
+          default: 1
+        subTotal:
+          type: number
+          description: Total price/value of the order
+          example: 150.75
+          default: 150.75
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of order creation
+          example: '2026-04-21T12:00:00.000Z'
+          default: '2026-04-21T12:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+          example: '2026-04-21T12:30:00.000Z'
+          default: '2026-04-21T12:30:00.000Z'
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderStatusHistory'
+          description: Chronological list of status changes
+    CreateOrderRequest:
+      type: object
+      required:
+        - shipmentNumber
+        - recipientName
+        - recipientPhone
+        - clientId
+        - quantity
+        - subTotal
+      properties:
+        shipmentNumber:
+          type: string
+          description: Unique shipment number
+          example: SHIP-999000111
+          default: SHIP-999000111
+        recipientName:
+          type: string
+          description: Recipient's full name
+          example: Fahad Al-Qahtani
+          default: Fahad Al-Qahtani
+        recipientPhone:
+          type: string
+          description: Recipient's Saudi mobile number
+          example: '0550001111'
+          default: '0550001111'
+        clientId:
+          type: string
+          format: uuid
+          description: UUID of the client
+          example: d4bb6f64-6075-470c-9118-9b2b3407b765
+          default: d4bb6f64-6075-470c-9118-9b2b3407b765
+        tripId:
+          type: string
+          format: uuid
+          description: Optional trip assignment
+          example: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+          default: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+        quantity:
+          type: integer
+          description: Item count
+          example: 1
+          default: 1
+        subTotal:
+          type: number
+          description: Order subtotal
+          example: 200
+          default: 200
+        pickupAddressId:
+          type: string
+          format: uuid
+          description: MongoDB ID of an existing pickup address (e.g., stored Client Warehouse)
+          example: 643f1b2c9d3e4b5a6c7d8e9f
+          default: 643f1b2c9d3e4b5a6c7d8e9f
+        pickupAddress:
+          $ref: '#/components/schemas/orderAddress'
+          description: Full object to create a NEW pickup address in MongoDB on-the-fly.
+        deliveryAddressId:
+          type: string
+          format: uuid
+          description: MongoDB ID of an existing delivery address.
+          example: 643f1b2c9d3e4b5a6c7d8e9a
+          default: 643f1b2c9d3e4b5a6c7d8e9a
+        deliveryAddress:
+          $ref: '#/components/schemas/orderAddress'
+          description: Full object to create a NEW delivery address in MongoDB on-the-fly.
+    UpdateOrderStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - Created
+            - Assigned
+            - InTransit
+            - Delivered
+            - Returned
+            - Cancelled
+          description: The new status to apply
+          example: InTransit
+          default: InTransit
+        reason:
+          type: string
+          description: Optional comment or reason for the status change
+          example: Order picked up by driver
+          default: Order picked up by driver
+    TransferOrderRequest:
+      type: object
+      required:
+        - tripId
+      properties:
+        tripId:
+          type: string
+          format: uuid
+          description: The ID of the new trip to transfer the order to
+          example: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+          default: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+    Trip:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the trip
+          example: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+          default: 9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb
+        tripNumber:
+          type: string
+          description: Unique numer for the trip
+          example: TRIP-20260426-2a.la
+          default: TRIP-20260426-2a.la
+        title:
+          type: string
+          description: title for the trip
+          example: trep branch Riyadh City
+          default: trep branch Riyadh City
+        driverId:
+          type: string
+          format: uuid
+          description: ID of the assigned driver
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        carId:
+          type: string
+          format: uuid
+          description: ID of the assigned car
+          example: c27b6f64-6075-470c-9118-9b2b3407b888
+          default: c27b6f64-6075-470c-9118-9b2b3407b888
+        startTime:
+          type: string
+          format: date-time
+          description: Trip start timestamp
+          example: '2026-04-21T08:00:00.000Z'
+          default: '2026-04-21T08:00:00.000Z'
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Trip end timestamp when trip is completed/cancelled
+          example: '2026-04-21T17:30:00.000Z'
+          default: '2026-04-21T17:30:00.000Z'
+        collectedCount:
+          type: integer
+          description: Number of orders collected during trip
+          example: 20
+          default: 0
+        deliveredCount:
+          type: integer
+          description: Number of orders delivered during trip
+          example: 18
+          default: 0
+        returnedCount:
+          type: integer
+          description: Number of returned orders during trip
+          example: 2
+          default: 0
+        totalCashCollected:
+          type: number
+          description: Total cash amount collected in this trip
+          example: 1250.5
+          default: 0
+        endReason:
+          type: string
+          nullable: true
+          description: Reason for ending or cancelling trip
+          example: Finished all assigned orders
+          default: Finished all assigned orders
+        notes:
+          type: string
+          nullable: true
+          description: Internal notes related to this trip
+          example: Driver requested route adjustment near noon
+          default: Driver requested route adjustment near noon
+        status:
+          type: string
+          enum:
+            - Scheduled
+            - InProgress
+            - Completed
+            - Cancelled
+          description: Operational status of the trip
+          example: InProgress
+          default: Scheduled
+        car:
+          type: object
+          description: Assigned car basic details
+          nullable: true
+        driver:
+          type: object
+          description: Assigned driver basic details
+          nullable: true
+        orders:
+          type: array
+          description: Orders associated with this trip
+          items:
+            type: object
+        isDeleted:
+          type: boolean
+          description: Soft delete flag
+          example: false
+          default: false
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when record was soft-deleted
+          example: '2026-04-21T18:00:00.000Z'
+          default: '2026-04-21T18:00:00.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of trip creation
+          example: '2026-04-21T08:00:00.000Z'
+          default: '2026-04-21T08:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp of last update
+          example: '2026-04-21T12:30:00.000Z'
+          default: '2026-04-21T12:30:00.000Z'
+    CreateTripRequest:
+      type: object
+      required:
+        - driverId
+        - carId
+        - startTime
+      properties:
+        driverId:
+          type: string
+          format: uuid
+          description: UUID of the driver to assign
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        carId:
+          type: string
+          format: uuid
+          description: UUID of the car to assign
+          example: c27b6f64-6075-470c-9118-9b2b3407b888
+          default: c27b6f64-6075-470c-9118-9b2b3407b888
+        startTime:
+          type: string
+          format: date-time
+          description: Planned trip start time
+          example: '2026-04-21T08:00:00.000Z'
+          default: '2026-04-21T08:00:00.000Z'
+        endTime:
+          type: string
+          format: date-time
+          description: Optional planned trip end time
+          example: '2026-04-21T17:00:00.000Z'
+          default: '2026-04-21T17:00:00.000Z'
+        collectedCount:
+          type: integer
+          description: Initial collected count
+          example: 0
+          default: 0
+        deliveredCount:
+          type: integer
+          description: Initial delivered count
+          example: 0
+          default: 0
+        returnedCount:
+          type: integer
+          description: Initial returned count
+          example: 0
+          default: 0
+        totalCashCollected:
+          type: number
+          description: Initial total cash collected
+          example: 0
+          default: 0
+        endReason:
+          type: string
+          description: Optional reason for ending/cancelling the trip
+          example: Cancelled due to weather conditions
+          default: Cancelled due to weather conditions
+        notes:
+          type: string
+          description: Optional internal notes
+          example: Handle fragile shipments first
+          default: Handle fragile shipments first
+        status:
+          type: string
+          enum:
+            - Scheduled
+            - InProgress
+            - Completed
+            - Cancelled
+          description: Trip status
+          example: Scheduled
+          default: Scheduled
+    UpdateTripRequest:
+      type: object
+      properties:
+        driverId:
+          type: string
+          format: uuid
+          description: New driver UUID (if reassigning)
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+          default: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        carId:
+          type: string
+          format: uuid
+          description: New car UUID (if reassigning)
+          example: c27b6f64-6075-470c-9118-9b2b3407b888
+          default: c27b6f64-6075-470c-9118-9b2b3407b888
+        endTime:
+          type: string
+          format: date-time
+          description: Actual trip end time
+          example: '2026-04-21T17:30:00.000Z'
+          default: '2026-04-21T17:30:00.000Z'
+        collectedCount:
+          type: integer
+          description: Updated collected count
+          example: 20
+          default: 0
+        deliveredCount:
+          type: integer
+          description: Updated delivered count
+          example: 18
+          default: 0
+        returnedCount:
+          type: integer
+          description: Updated returned count
+          example: 2
+          default: 0
+        totalCashCollected:
+          type: number
+          description: Updated total cash collected
+          example: 1250.5
+          default: 0
+        endReason:
+          type: string
+          description: Reason for finishing/cancelling trip
+          example: Trip completed with all stops covered
+          default: Trip completed with all stops covered
+        notes:
+          type: string
+          description: Additional notes
+          example: One delivery delayed by traffic
+          default: One delivery delayed by traffic
+        status:
+          type: string
+          enum:
+            - Scheduled
+            - InProgress
+            - Completed
+            - Cancelled
+          description: Updated trip status
+          example: Completed
+          default: Scheduled
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the activity log
+          example: 4f389de8-66e0-4b5a-87f6-7ae17fefd4f0
+          default: 4f389de8-66e0-4b5a-87f6-7ae17fefd4f0
+        userId:
+          type: string
+          format: uuid
+          description: The ID of the user who performed the action
+          example: 72cc2eeb-ef50-4820-973c-0c8d67e1e0cf
+          default: 72cc2eeb-ef50-4820-973c-0c8d67e1e0cf
+        action:
+          type: string
+          description: The action performed (e.g., CREATE_BRANCH)
+          example: CREATE_BRANCH
+          default: CREATE_BRANCH
+        module:
+          type: string
+          description: The module where the action occurred
+          example: Branch
+          default: Branch
+        recordId:
+          type: string
+          description: The ID of the affected record
+          example: b25c243d-c9c4-489d-8f65-61d1726a731f
+          default: b25c243d-c9c4-489d-8f65-61d1726a731f
+        description:
+          type: string
+          description: Human-readable description of the activity
+          example: 'إنشاء فرع جديد: Riyadh Main Branch'
+          default: 'إنشاء فرع جديد: Riyadh Main Branch'
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILED
+          example: SUCCESS
+          default: SUCCESS
+        errorMessage:
+          type: string
+          nullable: true
+          example: null
+        oldData:
+          type: object
+          nullable: true
+          example: null
+        newData:
+          type: object
+          nullable: true
+          example:
+            name: Riyadh Main Branch
+            city: Riyadh
+        requestMeta:
+          type: object
+          properties:
+            ip:
+              type: string
+              example: '::ffff:172.18.0.1'
+            url:
+              type: string
+              example: /api/v1/branches
+            method:
+              type: string
+              example: POST
+            device:
+              type: object
+              properties:
+                os:
+                  type: string
+                  example: Windows 10
+                browser:
+                  type: string
+                  example: Chrome 147.0.0.0
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-28T12:09:44.656Z'
+          default: '2026-04-28T12:09:44.656Z'
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+            role:
+              type: object
+              nullable: true
+            branch:
+              type: object
+              nullable: true
+    ActivityLogListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Activities fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ActivityLog'
+            meta:
+              $ref: '#/components/schemas/PaginationMeta'
+    ActivityLogDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Activity details fetched successfully
+        success:
+          type: boolean
+          example: true
+        responseAt:
+          type: string
+          format: date-time
+        data:
+          $ref: '#/components/schemas/ActivityLog'
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation successful
+        responseAt:
+          type: string
+          format: date-time
+          example: '2026-04-21T12:00:00.000Z'
+    MaintenanceResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/MaintenanceRecord'
+    OrderStatusHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the history record
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+          default: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        status:
+          type: string
+          description: Status at this point in time
+          example: InTransit
+          default: InTransit
+        reason:
+          type: string
+          description: Optional comment or reason for the status change
+          example: Driver picked up from warehouse
+          default: Driver picked up from warehouse
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of the status change
+          example: '2026-04-21T12:15:00.000Z'
+          default: '2026-04-21T12:15:00.000Z'
+    DriverStatusHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the driver status history record
+          example: a1b2c3d4-5e6f-7a8b-9c0d-123456789abc
+        driverId:
+          type: string
+          format: uuid
+          description: Identifier of the driver
+          example: f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e
+        status:
+          type: string
+          description: Driver status at the time of the history record
+          example: InTrip
+        isDeleted:
+          type: boolean
+          description: Soft-delete flag for the status history record
+          example: true
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the history record was soft deleted
+          example: '2026-04-21T18:00:00.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the history record was created
+          example: '2026-04-21T10:00:00.000Z'
+    orderAddress:
+      type: object
+      description: Simplified address structure for Order creation
+      properties:
+        details:
+          type: object
+          required:
+            - city
+            - street
+          properties:
+            city:
+              type: string
+              example: Riyadh
+            street:
+              type: string
+              example: King Fahd Rd
+            district:
+              type: string
+              example: Olaya
+            state:
+              type: string
+              example: Riyadh Region
+            country:
+              type: string
+              default: SA
+              example: SA
+            zipCode:
+              type: string
+              example: '12345'
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              default: Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              example:
+                - 46.6753
+                - 24.7136
+              description: '[longitude, latitude]'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: An error occurred
+        responseAt:
+          type: string
+          format: date-time
+          example: '2026-04-21T12:00:00.000Z'
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: validation_failed
+            path:
+              type: string
+              example: /api/v1/resource
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  code:
+                    type: string

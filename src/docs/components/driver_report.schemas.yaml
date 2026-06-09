@@ -1,0 +1,48 @@
+DriverReportResponse:
+  type: object
+  properties:
+    reportUrl:
+      type: string
+      description: Public URL to download the generated PDF report
+      example: "http://localhost:3000/public/uploads/driver-reports/driver-report-05b0565b-2026-05-07-1746123456789-123456789.pdf"
+      default: "http://localhost:3000/public/uploads/driver-reports/driver-report-05b0565b-2026-05-07-1746123456789-123456789.pdf"
+    filename:
+      type: string
+      description: Generated PDF filename
+      example: "driver-report-05b0565b-893e-47a5-b0d6-512851800825-2026-05-07-1746123456789-123456789.pdf"
+      default: "driver-report-05b0565b-893e-47a5-b0d6-512851800825-2026-05-07-1746123456789-123456789.pdf"
+
+TripReportRow:
+  type: object
+  properties:
+    tripNumber:
+      type: string
+      description: Unique trip number
+      example: "TRIP-20260507-aa34s"
+      default: "TRIP-20260507-aa34s"
+    plate:
+      type: string
+      description: Car plate (letters + number combined)
+      example: "ب د ج 6261"
+      default: "ب د ج 6261"
+    totalOrders:
+      type: integer
+      description: Total number of orders in this trip
+      example: 15
+      default: 15
+    totalDelivered:
+      type: integer
+      description: Number of delivered orders in this trip
+      example: 11
+      default: 11
+    totalNotDelivered:
+      type: integer
+      description: Number of undelivered orders in this trip
+      example: 4
+      default: 4
+    tripStatus:
+      type: string
+      enum: ["Scheduled", "InProgress", "Completed", "Cancelled", "InTransit", "Assigned"]
+      description: Current status of the trip
+      example: "Completed"
+      default: "Completed"

@@ -1,0 +1,258 @@
+openapi: 3.0.0
+
+info:
+  title: Logistics API
+  version: 1.0.0
+  description: API for managing logistics operations, clients, and addresses.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /v1/auth/login:
+    $ref: "./paths/auth.yaml#/login"
+  /v1/dashboard/summary:
+    $ref: "./paths/dashboard.yaml"
+  /v1/users:
+    $ref: "./paths/users.yaml"
+  /v1/users/me:
+    $ref: "./paths/users.yaml#/info"
+  /v1/users/archived:
+    $ref: "./paths/users.yaml#/archived"
+  /v1/users/archived/{id}:
+    $ref: "./paths/users.yaml#/archivedById"
+  /v1/users/{id}:
+    $ref: "./paths/users.yaml#/userById"
+  /v1/audit:
+    $ref: "./paths/audit.yaml#/auditRoot"
+  /v1/audit/{id}:
+    $ref: "./paths/audit.yaml#/auditById"
+  /v1/role:
+    $ref: "./paths/role.yaml"
+  /v1/role/archived:
+    $ref: "./paths/role.yaml#/archived"
+  /v1/role/archived/{id}:
+    $ref: "./paths/role.yaml#/archivedById"
+  /v1/role/{id}:  
+    $ref: "./paths/role_id.yaml"
+  /v1/branches:
+    $ref: "./paths/branch.paths.yaml#/branchesRoot"
+  /v1/branches/{id}:
+    $ref: "./paths/branch.paths.yaml#/branchById"
+  /v1/branches/archived:
+    $ref: "./paths/branch.paths.yaml#/archived"
+  /v1/cars:
+    $ref: "./paths/car.paths.yaml#/carRoot"
+  /v1/cars/{id}:
+    $ref: "./paths/car.paths.yaml#/carById"
+  /v1/cars/archived:
+    $ref: "./paths/car.paths.yaml#/archived"
+
+  # --- Car Images ---
+  /v1/car-images/car/{id}:
+    $ref: "./paths/car-image.paths.yaml#/imagesRoot"
+
+  /api/v1/car-images/car/{id}/archive:
+    $ref: "./paths/car-image.paths.yaml#/archiveRoot"
+  /api/v1/car-images/{imageId}:
+
+  /v1/car-images/{imageId}:
+
+    $ref: "./paths/car-image.paths.yaml#/imageById"
+
+  # --- Car Maintenance (Nested under Car) ---
+  /v1/cars/{carId}/maintenance:
+    $ref: "./paths/car-maintenance.paths.yaml#/maintenanceRoot"
+  /v1/cars/{carId}/maintenance/{maintenanceId}:
+    $ref: "./paths/car-maintenance.paths.yaml#/maintenanceById"
+  /v1/cars/{carId}/maintenance/archived:
+    $ref: "./paths/car-maintenance.paths.yaml#/maintenanceArchived"
+  /v1/maintenance/archived:
+    $ref: "./paths/car-maintenance.paths.yaml#/globalMaintenanceArchived"
+
+  /v1/client:
+    $ref: "./paths/client.yaml"
+  /v1/client/archived:
+    $ref: "./paths/client.yaml#/archived"
+  /v1/client/archived/{id}:
+    $ref: "./paths/client.yaml#/archivedById"
+  /v1/client/{id}:
+    $ref: "./paths/client_id.yaml"
+  /v1/client/{id}/orders/archived:
+    $ref: "./paths/client_id.yaml#/archivedOrders"
+  /v1/client/{clientId}/addresses:
+    $ref: "./paths/client_addresses.yaml"
+  /v1/client/{clientId}/addresses/archived:
+    $ref: "./paths/client_addresses.yaml#/archived"
+  /v1/addresses/archived:
+    $ref: "./paths/client_addresses.yaml#/globalArchived"
+  /v1/addresses/{id}:
+    $ref: "./paths/client-address-detail.yaml"
+ # --- driver ---
+  /v1/driver:
+    $ref: "./paths/driver.yaml"
+  /v1/driver/me:
+    $ref: "./paths/driver.yaml#/me"
+  /v1/driver/archived:
+    $ref: "./paths/driver.yaml#/archived"
+  /v1/driver/archived/{id}:
+    $ref: "./paths/driver.yaml#/archivedById"
+  /v1/driver/archived/driverStatus/{id}:
+    $ref: "./paths/driver.yaml#/archivedDriverStatusById"
+  /v1/driver/driverStatus/{id}:
+    $ref: "./paths/driver.yaml#/deleteDriverStatusHistory"
+  /v1/driver/{id}:
+    $ref: "./paths/driver_id.yaml"
+  /v1/orders:
+    $ref: "./paths/order.paths.yaml#/ordersRoot"
+  /v1/orders/{id}:
+    $ref: "./paths/order.paths.yaml#/orderById"
+  /v1/orders/{id}/status:
+    $ref: "./paths/order.paths.yaml#/updateStatus"
+  /v1/orders/{id}/transfer:
+    $ref: "./paths/order.paths.yaml#/transferTrip"
+  /v1/orders/archived:
+    $ref: "./paths/order.paths.yaml#/archived"
+  /v1/trip:
+    $ref: "./paths/trip.yaml#/tripRoot"
+  /v1/trip/archived:
+    $ref: "./paths/trip.yaml#/archived"
+  /v1/trip/archived/{id}:
+    $ref: "./paths/trip.yaml#/archivedById"
+  /v1/trip/{id}:
+    $ref: "./paths/trip.yaml#/tripById"
+
+  /api/v1/trip/{id}/reports:
+    $ref: "./paths/trip-report.yaml#/tripReport"
+  /api/v1/trip/{id}/reports/client/{clientId}:
+    $ref: "./paths/trip-report.yaml#/tripClientReport"
+
+  /v1/reports/driver/{id}/daily:
+    $ref: "./paths/driver_report.path.yaml#/dailyReport"  
+components:
+  schemas:
+    # Auth
+    AuthIdentity:
+      $ref: "./components/auth.schemas.yaml#/AuthIdentity"
+    LoginRequest:
+      $ref: "./components/auth.schemas.yaml#/LoginRequest"
+    LoginResponse:
+      $ref: "./components/auth.schemas.yaml#/LoginResponse"
+    DashboardSummary:
+      $ref: "./components/dashboard.schemas.yaml#/DashboardSummary"
+    BranchDetail:
+      $ref: "./components/branch.schemas.yaml#/BranchDetail"
+    CreateBranchRequest:
+      $ref: "./components/branch.schemas.yaml#/CreateBranchRequest"
+    UpdateBranchRequest:
+      $ref: "./components/branch.schemas.yaml#/UpdateBranchRequest"
+    PaginationMeta:
+      $ref: "./components/Utils.schemas.yaml#/PaginationMeta"
+    ErrorResponse:
+      $ref: "./components/Utils.schemas.yaml#/ErrorResponse"
+    ClientIdentity:
+      $ref: "./components/client.schemas.yaml#/ClientIdentity"
+    ClientDetail:
+      $ref: "./components/client.schemas.yaml#/ClientDetail"
+    CreateClientRequest:
+      $ref: "./components/client.schemas.yaml#/CreateClientRequest"
+    UpdateClientRequest:
+      $ref: "./components/client.schemas.yaml#/UpdateClientRequest"
+    ClientAddress:
+      $ref: "./components/address.schemas.yaml#/ClientAddress"
+    AddressCreateRequest:
+      $ref: "./components/address.schemas.yaml#/AddressCreateRequest"
+    AddressUpdateRequest:
+      $ref: "./components/address.schemas.yaml#/AddressUpdateRequest"
+    Car:
+      $ref: "./components/car.schemas.yaml#/Car"
+    CreateCarRequest:
+      $ref: "./components/car.schemas.yaml#/CreateCarRequest"
+    UpdateCarRequest:
+      $ref: "./components/car.schemas.yaml#/UpdateCarRequest"
+    CarStatusHistory:
+      $ref: "./components/car.schemas.yaml#/CarStatusHistory"
+    CarImage:
+      $ref: "./components/car-image.schemas.yaml#/CarImage"
+    AddCarImagesResponse:
+      $ref: "./components/car-image.schemas.yaml#/AddCarImagesResponse"
+
+    UserIdentity:
+      $ref: "./components/user.schemas.yaml#/UserIdentity"
+    CreateUserRequest:
+      $ref: "./components/user.schemas.yaml#/CreateUserRequest"
+    UpdateUserRequest:
+      $ref: "./components/user.schemas.yaml#/UpdateUserRequest"
+    UserListResponse:
+      $ref: "./components/user.schemas.yaml#/UserListResponse"
+    UserDetailResponse:
+      $ref: "./components/user.schemas.yaml#/UserDetailResponse"
+    UserUpdateResponse:
+      $ref: "./components/user.schemas.yaml#/UserUpdateResponse"
+    UserDeleteResponse:
+      $ref: "./components/user.schemas.yaml#/UserDeleteResponse"
+
+    RoleIdentity:
+      $ref: "./components/role.schemas.yaml#/RoleIdentity"  
+    CreateRoleRequest:
+      $ref: "./components/role.schemas.yaml#/CreateRoleRequest"
+    UpdateRoleRequest:
+      $ref: "./components/role.schemas.yaml#/UpdateRoleRequest"
+    RoleListResponse:
+      $ref: "./components/role.schemas.yaml#/RoleListResponse"
+    RoleUpdateResponse:
+      $ref: "./components/role.schemas.yaml#/RoleUpdateResponse"
+    RoleDeleteResponse:
+      $ref: "./components/role.schemas.yaml#/RoleDeleteResponse"       
+
+    MaintenanceRecord:
+      $ref: "./components/car-maintenance.schemas.yaml#/MaintenanceRecord"
+    CreateMaintenanceRequest:
+      $ref: "./components/car-maintenance.schemas.yaml#/CreateMaintenanceRequest"
+    UpdateMaintenanceRequest:
+      $ref: "./components/car-maintenance.schemas.yaml#/UpdateMaintenanceRequest"
+    #driver
+    DriverIdentity:
+      $ref: "./components/driver.schemas.yaml#/DriverIdentity"
+    CreateDriverRequest:
+      $ref: "./components/driver.schemas.yaml#/CreateDriverRequest"
+    UpdateDriverRequest:
+      $ref: "./components/driver.schemas.yaml#/UpdateDriverRequest"
+    DriverListResponse:
+      $ref: "./components/driver.schemas.yaml#/DriverListResponse"
+    DriverUpdateResponse:
+      $ref: "./components/driver.schemas.yaml#/DriverUpdateResponse"
+    DriverDeleteResponse:
+      $ref: "./components/driver.schemas.yaml#/DriverDeleteResponse"
+    DriverReportResponse:
+      $ref: "./components/driver_report.schemas.yaml#/DriverReportResponse"
+    TripReportRow:
+      $ref: "./components/driver_report.schemas.yaml#/TripReportRow"
+    # Orders
+    Order:
+      $ref: "./components/order.schemas.yaml#/Order"
+    CreateOrderRequest:
+      $ref: "./components/order.schemas.yaml#/CreateOrderRequest"
+    UpdateOrderStatusRequest:
+      $ref: "./components/order.schemas.yaml#/UpdateOrderStatusRequest"
+    TransferOrderRequest:
+      $ref: "./components/order.schemas.yaml#/TransferOrderRequest"
+    # Trips
+    Trip:
+      $ref: "./components/trip.schemas.yaml#/Trip"
+    CreateTripRequest:
+      $ref: "./components/trip.schemas.yaml#/CreateTripRequest"
+    UpdateTripRequest:
+      $ref: "./components/trip.schemas.yaml#/UpdateTripRequest"
+    ActivityLog:
+      $ref: "./components/audit.schemas.yaml#/ActivityLog"
+    ActivityLogListResponse:
+      $ref: "./components/audit.schemas.yaml#/ActivityLogListResponse"
+    ActivityLogDetailResponse:
+      $ref: "./components/audit.schemas.yaml#/ActivityLogDetailResponse"
+  securitySchemes:
+    bearerAuth:
+      $ref: "./components/Utils.schemas.yaml#/bearerAuth"
+
+    

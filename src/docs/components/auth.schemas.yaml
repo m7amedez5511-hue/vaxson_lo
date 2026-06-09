@@ -1,0 +1,60 @@
+AuthIdentity:
+  type: object
+  properties:
+
+    userName:
+      type: string
+      description: The unique personal name for user
+      example: "user_12345"  
+      default: "user_12345"
+    email:
+      type: string
+      description: Primary contact email address
+      example: "contact@megalogistics.sa"
+      default: "contact@megalogistics.sa"
+    phone:
+      type: string
+      description: Contact phone number
+      example: "0566778899"
+      default: "0566778899"
+    password:
+      type: string
+      description: password of user 
+      example: "12345678"
+      default: "12345678"
+LoginRequest:
+  type: object
+  required:
+    - userName
+    - phone
+    - password
+  properties:
+    userName:
+      type: string
+      example: "user_12345"
+      default: "mohamed_slash"
+    email:
+      type: string
+      example: "contact@megalogistics.sa"
+      default: "contact@megalogistics.sa"
+    phone:
+      type: string
+      example: "0566778899"
+      default: "+966512345678"
+    password:
+      type: string
+      minLength: 8
+      example: "password123"
+      default: "password123"
+
+LoginResponse:
+  type: object
+  properties:
+    user:
+      $ref: "#/AuthIdentity"
+    accessToken:
+      type: string
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    refreshToken:
+      type: string
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

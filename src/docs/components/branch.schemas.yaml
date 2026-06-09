@@ -1,0 +1,155 @@
+BranchDetail:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "831d6976-9e99-4a45-9a49-76ad2675af49"
+    name:
+      type: string
+      default: "Riyadh Main Branch"
+      example: "Riyadh Main Branch"
+    email:
+      type: string
+      default: "riyadh.branch@slash.com"
+      example: "riyadh.branch@slash.com"
+    phone:
+      type: string
+      default: "0500000001"
+      example: "0500000001"
+    country:
+      type: string
+      default: "SA"
+      example: "SA"
+    city:
+      type: string
+      default: "Riyadh"
+      example: "Riyadh"
+    state:
+      type: string
+      nullable: true
+      default: "Riyadh Region"
+      example: "Riyadh Region"
+    district:
+      type: string
+      default: "Al-Olaya"
+      example: "Al-Olaya"
+    street:
+      type: string
+      default: "King Fahd St"
+      example: "King Fahd St"
+    buildingNo:
+      type: string
+      nullable: true
+      default: "123"
+      example: "123"
+    unitNo:
+      type: string
+      nullable: true
+      default: "10"
+      example: "10"
+    zipCode:
+      type: string
+      nullable: true
+      default: "12345"
+      example: "12345"
+    latitude:
+      type: number
+      default: 24.7136
+      example: 24.7136
+    longitude:
+      type: number
+      default: 46.6753
+      example: 46.6753
+    isActive:
+      type: boolean
+      default: true
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+CreateBranchRequest:
+  type: object
+  required:
+    - name
+    - email
+    - city
+    - street
+  properties:
+    name:
+      type: string
+      default: "Riyadh Main Branch"
+      example: "Riyadh Main Branch"
+    email:
+      type: string
+      default: "riyadh.branch@slash.com"
+      example: "riyadh.branch@slash.com"
+    phone:
+      type: string
+      default: "0500000001"
+      example: "0500000001"
+    country:
+      type: string
+      default: "SA"
+      example: "SA"
+    city:
+      type: string
+      default: "Riyadh"
+      example: "Riyadh"
+    state:
+      type: string
+      default: "Riyadh Region"
+      example: "Riyadh Region"
+    district:
+      type: string
+      default: "Al-Olaya"
+      example: "Al-Olaya"
+    street:
+      type: string
+      default: "King Fahd St"
+      example: "King Fahd St"
+    buildingNo:
+      type: string
+      default: "123"
+      example: "123"
+    unitNo:
+      type: string
+      default: "10"
+      example: "10"
+    zipCode:
+      type: string
+      default: "12222"
+      example: "12222"
+    latitude:
+      type: number
+      default: 24.7136
+      example: 24.7136
+    longitude:
+      type: number
+      default: 46.6753
+      example: 46.6753
+
+UpdateBranchRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Updated Riyadh Branch"
+    email:
+      type: string
+      example: "updated.riyadh@slash.com"
+    phone:
+      type: string
+      example: "0555555555"
+    city:
+      type: string
+      example: "Jeddah"
+    street:
+      type: string
+      example: "Tahlia St"
+    isActive:
+      type: boolean
+      default: true
+      example: true

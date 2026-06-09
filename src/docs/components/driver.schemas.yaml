@@ -1,0 +1,363 @@
+DriverIdentity:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the driver (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    name:
+      type: string
+      description: The legal name or identifier of the driver
+      example: "driver on logistics"
+      default: "driver on logistics"
+    userName:
+      type: string
+      description: The unique userName of the driver
+      example: "driver_123"
+      default: "driver_123"
+    email:
+      type: string
+      description: Primary contact email address
+      example: "driver@megalogistics.sa"
+      default: "driver@megalogistics.sa"
+    phone:
+      type: string
+      description: Contact phone number
+      example: "+966512345678"
+      default: "+966512345678"
+    address:
+      type: string
+      description: driver adress
+      example: "Riyadh, Kingdom of Saudi Arabia"
+      default: "Riyadh, Kingdom of Saudi Arabia"
+    nationality:
+      type: string
+      description: driver nationality
+      example: "Saudi"
+      default: "Saudi"
+    nationalId:
+      type: string
+      description: driver nationalId
+      example: "123456789123456"
+      default: "123456789123456"
+    nationalIdType:
+      type: string
+      enum: ["NationalID", "Iqama", "Passport"]
+      description: Category of the nationalIdType
+      example: "Passport"
+      default: "Passport"
+    gosiNumber:
+      type: string
+      description: driver gosiNumber
+      example: "123456"
+      default: "123456"
+    licenseNumber:
+      type: string
+      description: number of license for driver
+      example: "1234567899"
+      default: "1234567899"
+    licenseType:
+      type: string
+      description: type of the license for driver
+      example: "personal license"
+      default: "personal license"
+    licenseExpiry:
+      type: string
+      description: date end license for driver
+      example: "2026-10-22T00:00:00.000Z"
+      default: "2026-10-22T00:00:00.000Z"
+    photo:
+      type: string
+      description: Stored filename for driver profile photo
+      example: "photo-1777977981746-543241427.png"
+      default: "photo-1777977981746-543241427.png"
+    photoUrl:
+      type: string
+      description: Public URL for driver profile photo
+      example: "http://localhost:3000/public/uploads/driver-photos/photo-1777977981746-543241427.png"
+      default: "http://localhost:3000/public/uploads/driver-photos/photo-1777977981746-543241427.png"
+    nationalPhoto:
+      type: string
+      description: Stored filename for driver national ID photo
+      example: "nationalPhoto-1777977981746-543241427.png"
+      default: "nationalPhoto-1777977981746-543241427.png"
+    nationalPhotoUrl:
+      type: string
+      description: Public URL for driver national ID photo
+      example: "http://localhost:3000/public/uploads/driver-photos/nationalPhoto-1777977981746-543241427.png"
+      default: "http://localhost:3000/public/uploads/driver-photos/nationalPhoto-1777977981746-543241427.png"
+    driverCardPhoto:
+      type: string
+      description: Stored filename for driver card photo
+      example: "driverCardPhoto-1777977981746-543241427.png"
+      default: "driverCardPhoto-1777977981746-543241427.png"
+    driverCardPhotoUrl:
+      type: string
+      description: Public URL for driver card photo
+      example: "http://localhost:3000/public/uploads/driver-photos/driverCardPhoto-1777977981746-543241427.png"
+      default: "http://localhost:3000/public/uploads/driver-photos/driverCardPhoto-1777977981746-543241427.png"
+    driverCardNumber:
+      type: string
+      description: number of personal card
+      example: "123456789123456"
+      default: "123456789123456"
+    driverCardType:
+      type: string
+      enum: ["Temporary", "Seasonal", "Annual", "Restricted"]
+      description: Category of the driverCardType
+      example: "Temporary"
+      default: "Temporary"
+    status:
+      type: string
+      enum: ["Active", "Inactive", "InTrip", "Suspended"]
+      description: Category of the driver status
+      example: "Active"
+      default: "Active"
+    isActive:
+      type: boolean
+      description: Status indicating if the driver is currently active
+      example: true
+      default: true
+    isDeleted:
+      type: boolean
+      description: Soft-delete flag
+      example: false
+      default: false
+    driverType:
+      type: string
+      description: type of the driver
+      example: "transport driver"
+      default: "transport driver"
+    createdAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of record creation
+      example: "2026-04-16T12:00:00.000Z"
+      default: "2026-04-16T12:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of the last update
+      example: "2026-04-16T12:30:00.000Z"
+      default: "2026-04-16T12:30:00.000Z"
+
+CreateDriverRequest:
+  type: object
+  required:
+    - name
+    - phone
+    - email
+    
+  properties:
+    name:
+      type: string
+      description: Full name or Company name
+      example: "Slash Logistics"
+      default: "Slash Logistics"
+    email:
+      type: string
+      description: Unique email for the client
+      example: "owner@slash.sa"
+      default: "owner@slash.sa"
+    phone:
+      type: string
+      description: Mobile number
+      example: "0501112223"
+      default: "0501112223"
+    address:
+      type: string
+      description: driver adress
+      example: "Riyadh, Kingdom of Saudi Arabia"
+      default: "Riyadh, Kingdom of Saudi Arabia"
+    nationality:
+      type: string
+      description: driver nationality
+      example: " Saudi "
+      default: "Saudi" 
+    nationalId:
+      type: string
+      description: driver nationalId
+      example: "123456789123456"
+      default: "123456789123456"  
+    nationalIdType:
+      type: string
+      enum: ["NationalID", "Iqama","Passport"]
+      description: Category of the nationalIdType
+      example: "Passport"  
+      defult: "NationalID" 
+    gosiNumber: 
+      type: string
+      description: driver gosiNumber
+      example: "123456" 
+      defult:  "123456" 
+    licenseNumber:
+      type: string
+      description: number of license for driver
+      example: "1234567899"
+      defult: "1234567899" 
+    licenseType:
+      type: string
+      description: type of the license for driver
+      example: "personal license" 
+      defult: "personal license" 
+    licenseExpiry:
+      type: string
+      description: date end  license for driver
+      example: "2026-10-22T00:00:00.000Z"  
+      defult:  "2026-10-22T00:00:00.000Z"  
+    photo:
+      type: string
+      format: binary
+      description: Driver profile photo file
+    nationalPhoto:
+      type: string
+      format: binary
+      description: Driver national ID photo file
+    driverCardPhoto:
+      type: string
+      format: binary
+      description: Driver card photo file
+    driverCardNumber:
+      type: string
+      description: number of personal card
+      example: "123456789123456"
+      defult: "123456789123456"
+    driverCardType:
+      type: string
+      enum: ["Temporary", "Seasonal","Annual","Restricted"]
+      description: Category of the driverCardType
+      example: "Temporary" 
+      defult: "Temporary"
+    status:
+      type: string
+      enum: ["Active", "Inactive","InTrip","Suspended"]
+      description: Category of the driver status
+      example: "Active" 
+      defult: "Active"  
+UpdateDriverRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Slash Logistics driver."
+      default: "Slash Logistics driver."
+    email:
+      type: string
+      example: "driver@slash.sa"
+      default: "driver@slash.sa"
+    phone:
+      type: string
+      example: "0509998877"
+      default: "0509998877"
+    
+    isActive:
+      type: boolean
+      description: Status indicating if the driver is active
+      example: true
+      default: true
+    photo:
+      type: string
+      format: binary
+      description: Driver profile photo file
+    nationalPhoto:
+      type: string
+      format: binary
+      description: Driver national ID photo file
+    driverCardPhoto:
+      type: string
+      format: binary
+      description: Driver card photo file
+DriverStatusHistory:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the driver status history record
+      example: "a1b2c3d4-5e6f-7a8b-9c0d-123456789abc"
+    driverId:
+      type: string
+      format: uuid
+      description: Identifier of the driver
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    status:
+      type: string
+      description: Driver status at the time of the history record
+      example: "InTrip"
+    isDeleted:
+      type: boolean
+      description: Soft-delete flag for the status history record
+      example: true
+    deletedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when the history record was soft deleted
+      example: "2026-04-21T18:00:00.000Z"
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the history record was created
+      example: "2026-04-21T10:00:00.000Z"
+
+DriverListResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "drivers fetched successfully"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        users:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/DriverIdentity"
+            meta:
+              $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+DriverUpdateResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "Driver.update_successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        driver:
+          $ref: "#/DriverIdentity"
+
+DriverDeleteResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "Driver delete successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        driver:
+          $ref: "#/DriverIdentity"
+      default: true

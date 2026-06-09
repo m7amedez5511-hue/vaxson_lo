@@ -1,0 +1,195 @@
+maintenanceRoot:
+  post:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Create a maintenance record
+    description: Creates a new maintenance record for a car and automatically updates the car status to `InMaintenance`.
+    parameters:
+      - in: path
+        name: carId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "64650231-e2ba-4991-b8bd-75b9682b4d8c"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/car-maintenance.schemas.yaml#/CreateMaintenanceRequest"
+    responses:
+      "201":
+        description: Maintenance record created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/car-maintenance.schemas.yaml#/MaintenanceResponse"
+      "404":
+        description: Car not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  get:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Get maintenance history for a car
+    description: Returns all maintenance records for the specified car ordered by creation date descending.
+    parameters:
+      - in: path
+        name: carId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "64650231-e2ba-4991-b8bd-75b9682b4d8c"
+    responses:
+      "200":
+        description: List of maintenance records
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/car-maintenance.schemas.yaml#/MaintenanceRecord"
+
+maintenanceById:
+  patch:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Update a maintenance record
+    description: Updates the reason, cost, or dates of an existing maintenance record.
+    parameters:
+      - in: path
+        name: carId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "64650231-e2ba-4991-b8bd-75b9682b4d8c"
+      - in: path
+        name: maintenanceId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "e9ab8ea8-5176-4270-be66-3bb92d2c3aca"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/car-maintenance.schemas.yaml#/UpdateMaintenanceRequest"
+    responses:
+      "200":
+        description: Maintenance record updated
+        content:
+          application/json:
+            schema:
+              $ref: "../components/car-maintenance.schemas.yaml#/MaintenanceResponse"
+      "404":
+        description: Maintenance record not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  delete:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Delete a maintenance record
+    description: |
+      Soft-deletes the maintenance record and automatically reverts the car status back to `Active`.
+      A new entry is added to `CarStatusHistory` to record this transition.
+    parameters:
+      - in: path
+        name: carId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "64650231-e2ba-4991-b8bd-75b9682b4d8c"
+      - in: path
+        name: maintenanceId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: "e9ab8ea8-5176-4270-be66-3bb92d2c3aca"
+    responses:
+      "204":
+        description: Maintenance deleted effectively (No Content)
+      "404":
+        description: Maintenance record not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+maintenanceArchived:
+  get:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Get archived maintenance for a car
+    description: Retrieve soft-deleted maintenance records for a specific car.
+    parameters:
+      - in: path
+        name: carId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Archived maintenance fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/car-maintenance.schemas.yaml#/MaintenanceRecord"
+
+globalMaintenanceArchived:
+  get:
+    tags:
+      - Car Maintenance
+    security:
+      - bearerAuth: []
+    summary: Get ALL archived maintenance records
+    description: Retrieve a global list of all soft-deleted maintenance records in the system.
+    responses:
+      "200":
+        description: Global archived maintenance fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/car-maintenance.schemas.yaml#/MaintenanceRecord"

@@ -1,0 +1,63 @@
+{
+  "name": "Logistics-Api",
+  "version": "1.0.0",
+  "description": "logistics platform for fleet management and driver management",
+  "main": "server.js",
+  "types": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon -L src/server.js --exec node",
+    "docs:export": "redocly bundle src/docs/swagger.yaml -o src/docs/bundled.yaml && openapi2postmanv2 -s src/docs/bundled.yaml -o src/docs/postman_collection.json -p -c postman_config.json",
+    "cron:trigger": "node scripts/trigger-cron.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.slash.sa/Slash-Git/LogisticsApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^15.3.5",
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "axios": "^1.15.2",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^5.76.2",
+    "config": "^4.4.1",
+    "cors": "^2.8.6",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "http-errors": "^2.0.1",
+    "ioredis": "^5.10.1",
+    "js-yaml": "^4.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "luxon": "^3.7.2",
+    "mongoose": "^9.4.1",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "nanoid": "^5.1.9",
+    "node-cron": "^4.2.1",
+    "p-limit": "^7.3.0",
+    "pg": "^8.20.0",
+    "puppeteer-core": "^24.43.0",
+    "redis": "^5.11.0",
+    "rides": "^1.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "ua-parser-js": "^2.0.9",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^7.8.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}

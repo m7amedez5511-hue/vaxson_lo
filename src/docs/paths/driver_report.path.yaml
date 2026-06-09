@@ -1,0 +1,61 @@
+dailyReport:
+  get:
+    summary: Generate driver daily report (PDF)
+    description: |
+      Generates a PDF report for a specific driver on a given date.
+      The report includes trip details (trip number, plate, total orders, delivered, not delivered, status)
+      and overall stats (total trips, total orders, delivered, returned).
+      Returns a URL to download the generated PDF file.
+    tags:
+      - Driver Reports
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Driver ID (UUID)
+        example: "05b0565b-893e-47a5-b0d6-512851800825"
+      - in: query
+        name: date
+        required: false
+        schema:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: "2026-05-07"
+        description: |
+          Date to generate the report for (YYYY-MM-DD).
+          Defaults to today's date if not provided.
+    responses:
+      "200":
+        description: Driver report generated successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/driver_report.schemas.yaml#/DriverReportResponse"
+      "400":
+        description: Invalid date format
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "404":
+        description: Driver not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized - Authentication required
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

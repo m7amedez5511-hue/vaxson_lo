@@ -1,0 +1,178 @@
+UserIdentity:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the user (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    name:
+      type: string
+      description: The legal name or identifier of the user
+      example: "Mega Logistics Global"
+      default: "Mega Logistics Global"
+    userName:
+      type: string
+      description: The unique personal name for user
+      example: "user_12345"
+      default: "user_12345"
+    email:
+      type: string
+      description: Primary contact email address
+      example: "contact@megalogistics.sa"
+      default: "contact@megalogistics.sa"
+    phone:
+      type: string
+      description: Contact phone number
+      example: "0566778899"
+      default: "0566778899"
+    photo:
+      type: string
+      description: user photo
+      example: "https://photo.gpg"
+      default: "https://photo.gpg"
+    isActive:
+      type: boolean
+      description: Status indicating if the User is currently active
+      example: true
+      default: true
+    isDeleted:
+      type: boolean
+      description: Soft-delete flag
+      example: false
+      default: false
+    createdAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of record creation
+      example: "2026-04-16T12:00:00.000Z"
+      default: "2026-04-16T12:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of the last update
+      example: "2026-04-16T12:30:00.000Z"
+      default: "2026-04-16T12:30:00.000Z"
+CreateUserRequest:
+  type: object
+  required:
+    - name
+    - phone
+    - email
+  properties:
+    name:
+      type: string
+      description: Full name or User name
+      example: "Slash Logistics Manger"
+      default: "Slash Logistics Manger"
+    email:
+      type: string
+      description: Unique email for the user
+      example: "manger@slash.sa"
+      default: "manger@slash.sa"
+    phone:
+      type: string
+      description: Mobile number
+      example: "+966512345678"
+      default: "+966512345678"
+UpdateUserRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Slash Logistics Inc."
+      default: "Slash Logistics Inc."
+    phone:
+      type: string
+      example: "+966512345678"
+      default: "+966512345678"
+    email:
+      type: string
+      example: "ceo@slash.sa"
+      default: "ceo@slash.sa"
+    photo:
+      type: string
+      example: "https://photo.jpg"
+      default: "https://photo.jpg"
+    isActive:
+      type: boolean
+      example: true
+UserListResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "users fetched successfully"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        users:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/UserIdentity"
+            meta:
+              $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+
+UserDetailResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "user fetched successfully"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        user:
+          $ref: "#/UserIdentity"
+
+UserUpdateResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "users.update_successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        user:
+          $ref: "#/UserIdentity"
+
+UserDeleteResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "users.delete_successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        user:
+          $ref: "#/UserIdentity"
+      default: true

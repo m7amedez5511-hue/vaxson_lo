@@ -1,0 +1,133 @@
+get:
+  summary: Get a client by ID
+  description: Retrieve detailed information about a specific client including their addresses.
+  tags:
+    - Client
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: UUID of the client
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  responses:
+    "200":
+      description: Client fetched successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/client.schemas.yaml#/ClientDetail"
+    "404":
+      description: Client not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+put:
+  summary: Update a client
+  description: Update client basic identity information like name, phone, and email.
+  tags:
+    - Client
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: UUID of the client to update
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/client.schemas.yaml#/UpdateClientRequest"
+  responses:
+    "200":
+      description: Client updated successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/client.schemas.yaml#/ClientIdentity"
+    "400":
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+    "404":
+      description: Client not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+delete:
+  summary: Delete a client
+  description: Performs a soft-delete on the client, setting `isDeleted` to true.
+  tags:
+    - Client
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: UUID of the client to delete
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  responses:
+    "204":
+      description: Client deleted successfully (No Content)
+    "404":
+      description: Client not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archivedOrders:
+  get:
+    summary: Get archived orders for a client
+    description: Retrieve soft-deleted orders associated with a specific client.
+    tags:
+      - Client
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Archived orders fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/order.schemas.yaml#/Order"

@@ -1,0 +1,468 @@
+Car:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    manufacturer:
+      type: string
+      default: "Toyota"
+      example: "Toyota"
+    model:
+      type: string
+      default: "Camry"
+      example: "Camry"
+    year:
+      type: integer
+      default: 2023
+      example: 2023
+    color:
+      type: string
+      nullable: true
+      default: "White"
+      example: "Blue"
+    plateNumber:
+      type: string
+      default: "1234"
+      example: "1234"
+    plateLetters:
+      type: string
+      default: "ح ب ا"
+      example: "ح ب ا"
+    plateType:
+      type: string
+      nullable: true
+      default: "نقل خاص"
+      example: "نقل خاص"
+    registrationNumber:
+      type: string
+      default: "1020304050"
+      example: "1020304050"
+    vinNumber:
+      type: string
+      default: "VIN123456789"
+      example: "ABC123456789XYZ"
+    ownerNationalId:
+      type: string
+      nullable: true
+      default: "1055667788"
+      example: "1055667788"
+    branchId:
+      type: string
+      format: uuid
+      default: "550e8400-e29b-41d4-a716-446655440001"
+      example: "550e8400-e29b-41d4-a716-446655440001"
+    actualUserId:
+      type: string
+      nullable: true
+      default: null
+      example: "8b178220-413e-11ee-be56-0242ac120002"
+    actualUserStartDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2023-10-01T10:00:00Z"
+    ownershipStartDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2023-01-15T08:30:00Z"
+    registrationIssueDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2023-01-20T00:00:00Z"
+    registrationExpiryDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2026-01-20T23:59:59Z"
+    registrationPhoto:
+      type: string
+      format: uri
+      nullable: true
+      default: null
+      example: "https://example.com/photos/reg_car1.jpg"
+    insuranceStatus:
+      type: string
+      default: "Valid"
+      example: "Valid"
+    insuranceExpiryDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2024-12-31T23:59:59Z"
+    insurancePhoto:
+      type: string
+      format: uri
+      nullable: true
+      default: null
+      example: "https://example.com/photos/ins_car1.jpg"
+    inspectionStatus:
+      type: string
+      nullable: true
+      default: "Valid"
+      example: "Valid"
+    inspectionExpiryDate:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2024-06-30T23:59:59Z"
+    operationCardNumber:
+      type: string
+      nullable: true
+      default: null
+      example: "OPC12345678"
+    operationCardExpiry:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2025-05-15T23:59:59Z"
+    gpsDeviceId:
+      type: string
+      nullable: true
+      default: null
+      example: "GPS-X100"
+    currentStatus:
+      type: string
+      default: "Active"
+      example: "Active"
+    currentImpoundStatus:
+      type: string
+      default: "None"
+      nullable: true
+      example: "None"
+    capacity:
+      type: integer
+      nullable: true
+      default: 5
+      example: 5
+    weight:
+      type: integer
+      nullable: true
+      default: 1500
+      example: 1500
+    isActive:
+      type: boolean
+      default: true
+      example: true
+    createdAt:
+      type: string
+      format: date-time
+      example: "2023-10-19T12:00:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      example: "2023-10-19T14:30:00Z"
+    statusHistory:
+      type: array
+      items:
+        $ref: '#/CarStatusHistory'
+
+CreateCarRequest:
+  type: object
+  required:
+    - manufacturer
+    - model
+    - year
+    - plateNumber
+    - plateLetters
+    - registrationNumber
+    - vinNumber
+    - branchId
+  properties:
+    manufacturer:
+      type: string
+      default: "Toyota"
+      example: "Toyota"
+    model:
+      type: string
+      default: "Camry"
+      example: "Camry"
+    year:
+      type: integer
+      default: 2023
+      example: 2023
+    color:
+      type: string
+      default: "White"
+      example: "Silver"
+    plateNumber:
+      type: string
+      default: "1234"
+      example: "5678"
+    plateLetters:
+      type: string
+      default: "ح ب ا"
+      example: "ط ر ق"
+    plateType:
+      type: string
+      default: "نقل خاص"
+      example: "نقل عام"
+    registrationNumber:
+      type: string
+      default: "1020304050"
+      example: "2030405060"
+    vinNumber:
+      type: string
+      default: "VIN123456789"
+      example: "VIN9876543210ZYX"
+    ownerNationalId:
+      type: string
+      default: "1055667788"
+      example: "1098765432"
+    branchId:
+      type: string
+      format: uuid
+      default: "550e8400-e29b-41d4-a716-446655440001"
+      example: "550e8400-e29b-41d4-a716-446655440001"
+    actualUserId:
+      type: string
+      format: uuid
+      default: null
+      example: "8b178220-413e-11ee-be56-0242ac120002"
+    actualUserStartDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2023-10-01T00:00:00Z"
+    ownershipStartDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2022-05-10T00:00:00Z"
+    registrationIssueDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2022-05-11T00:00:00Z"
+    registrationExpiryDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2025-05-10T23:59:59Z"
+    registrationPhoto:
+      type: string
+      format: uri
+      default: null
+      example: "https://example.com/photos/reg_car1.jpg"
+    insuranceStatus:
+      type: string
+      default: "Valid"
+      example: "Valid"
+    insuranceExpiryDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2024-12-31T23:59:59Z"
+    insurancePhoto:
+      type: string
+      format: uri
+      default: null
+      example: "https://example.com/photos/ins_car1.jpg"
+    inspectionStatus:
+      type: string
+      default: "Valid"
+      example: "Passed"
+    inspectionExpiryDate:
+      type: string
+      format: date-time
+      default: null
+      example: "2024-10-15T23:59:59Z"
+    operationCardNumber:
+      type: string
+      default: null
+      example: "OPC998877"
+    operationCardExpiry:
+      type: string
+      format: date-time
+      default: null
+      example: "2025-10-15T23:59:59Z"
+    gpsDeviceId:
+      type: string
+      default: null
+      example: "GPS-MOD-1"
+    currentStatus:
+      type: string
+      default: "Active"
+      example: "Active"
+    currentImpoundStatus:
+      type: string
+      default: "None"
+      example: "None"
+    capacity:
+      type: integer
+      default: 5
+      example: 4
+    weight:
+      type: integer
+      default: 2500
+      example: 1800
+
+UpdateCarRequest:
+  type: object
+  properties:
+    manufacturer:
+      type: string
+      default: "Toyota"
+      example: "Toyota"
+    model:
+      type: string
+      default: "Corolla"
+      example: "Corolla"
+    year:
+      type: integer
+      default: 2022
+      example: 2022
+    color:
+      type: string
+      default: "Black"
+      example: "Black"
+    plateNumber:
+      type: string
+      default: "4321"
+      example: "4321"
+    plateLetters:
+      type: string
+      default: "س ف ن"
+      example: "س ف ن"
+    plateType:
+      type: string
+      default: "خاص"
+      example: "خاص"
+    registrationNumber:
+      type: string
+      default: "3040506070"
+      example: "3040506070"
+    vinNumber:
+      type: string
+      default: "VIN665544332211"
+      example: "VIN665544332211"
+    ownerNationalId:
+      type: string
+      default: "1077889900"
+      example: "1077889900"
+    branchId:
+      type: string
+      format: uuid
+      default: "550e8400-e29b-41d4-a716-446655440001"
+      example: "550e8400-e29b-41d4-a716-446655440001"
+    actualUserId:
+      type: string
+      format: uuid
+      default: null
+      example: "8b178220-413e-11ee-be56-0242ac120002"
+    actualUserStartDate:
+      type: string
+      format: date-time
+      default: null
+    ownershipStartDate:
+      type: string
+      format: date-time
+      default: null
+    registrationIssueDate:
+      type: string
+      format: date-time
+      default: null
+    registrationExpiryDate:
+      type: string
+      format: date-time
+      default: null
+    registrationPhoto:
+      type: string
+      format: uri
+      default: null
+    insuranceStatus:
+      type: string
+      default: "Valid"
+      example: "Expired"
+    insuranceExpiryDate:
+      type: string
+      format: date-time
+      default: null
+    insurancePhoto:
+      type: string
+      format: uri
+      default: null
+    inspectionStatus:
+      type: string
+      default: "Valid"
+      example: "Expired"
+    inspectionExpiryDate:
+      type: string
+      format: date-time
+      default: null
+    operationCardNumber:
+      type: string
+      default: null
+    operationCardExpiry:
+      type: string
+      format: date-time
+      default: null
+    gpsDeviceId:
+      type: string
+      default: null
+    currentStatus:
+      type: string
+      default: "Active"
+      example: "InMaintenance"
+    currentImpoundStatus:
+      type: string
+      default: "None"
+      example: "Impounded"
+    capacity:
+      type: integer
+      default: 5
+      example: 2
+    weight:
+      type: integer
+      default: 2500
+      example: 3000
+    isActive:
+      type: boolean
+      default: true
+      example: false
+
+CarStatusHistory:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440008"
+    carId:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    statusType:
+      type: string
+      description: "Type of status being tracked (e.g., General, Impound)"
+      default: "General"
+      example: "General"
+    oldStatus:
+      type: string
+      nullable: true
+      default: null
+      example: "Active"
+    newStatus:
+      type: string
+      default: "Active"
+      example: "InMaintenance"
+    changeReason:
+      type: string
+      nullable: true
+      default: null
+      example: "Scheduled maintenance check"
+    changedAt:
+      type: string
+      format: date-time
+      default: null
+      example: "2023-10-19T15:00:00Z"

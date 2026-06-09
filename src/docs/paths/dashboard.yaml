@@ -1,0 +1,21 @@
+get:
+  tags:
+    - Dashboard
+  summary: Get dashboard summary
+  description: Returns a consolidated view of counts, alerts, active trips, and account security.
+  security:
+    - bearerAuth: []
+  responses:
+    200:
+      description: Dashboard summary fetched successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean, example: true }
+              message: { type: string, example: "dashboard summary fetched successfully" }
+              data:
+                $ref: '../components/dashboard.schemas.yaml#/DashboardSummary'
+    401:
+      description: Unauthorized

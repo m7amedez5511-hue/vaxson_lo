@@ -1,0 +1,52 @@
+CarImage:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    carId:
+      type: string
+      format: uuid
+      example: "6afa2cc7-6f64-4fd6-885e-aa374d076d3a"
+    image:
+      type: string
+      description: Filename of the uploaded image
+      example: "images-1714824000.jpg"
+    url:
+      type: string
+      description: Full accessible URL of the image
+      example: "http://localhost:3000/public/uploads/car-photos/images-1714824000.jpg"
+    publicId:
+      type: string
+      description: Unique identifier for the image (used for deletion)
+      example: "images-1714824000.jpg"
+    stage:
+      type: string
+      enum: [BEFORE, AFTER, GENERAL]
+      example: "BEFORE"
+    maintenanceId:
+      type: string
+      format: uuid
+      nullable: true
+      example: null
+    createdAt:
+      type: string
+      format: date-time
+
+AddCarImagesResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: true
+    message:
+      type: string
+      example: images_added_successfully
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: array
+      items:
+        $ref: "#/CarImage"

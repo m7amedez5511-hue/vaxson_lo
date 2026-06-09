@@ -1,0 +1,36 @@
+login:
+  post:
+    summary: Login User
+    description: Sign in user using endpoint to login and get token
+    tags:
+      - Auth
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/auth.schemas.yaml#/LoginRequest"
+    responses:
+      "200":
+        description: User logged in successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/auth.schemas.yaml#/LoginResponse"
+      "400":
+        description: Validation failed
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "401":
+        description: Wrong password or username not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

@@ -1,0 +1,241 @@
+ordersRoot:
+  get:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Get all active orders
+    description: Retrieves a list of orders with support for search (shipmentNumber, recipientName, recipientPhone), filtering (status, clientId, tripId), sorting, and pagination.
+    parameters:
+      - name: search
+        in: query
+        description: Search term for shipmentNumber, recipientName, or recipientPhone
+        schema:
+          type: string
+        example: "SHIP-123"
+      - name: currentStatus
+        in: query
+        description: Filter by order status
+        schema:
+          type: string
+          enum: [Created, Assigned, InTransit, Delivered, Returned, Cancelled]
+      - name: clientId
+        in: query
+        description: Filter by client ID
+        schema:
+          type: string
+          format: uuid
+      - name: tripId
+        in: query
+        description: Filter by trip ID
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+      - name: sort
+        in: query
+        schema:
+          type: string
+          default: "-createdAt"
+    responses:
+      200:
+        description: List of orders fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: "../components/order.schemas.yaml#/Order"
+                        pagination:
+                          $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      500:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  post:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Create a new order
+    description: Creates a new order with optional nested delivery address creation in MongoDB.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/order.schemas.yaml#/CreateOrderRequest"
+    responses:
+      201:
+        description: Order created successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/order.schemas.yaml#/Order"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+orderById:
+  get:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Get order details by ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Order details
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/order.schemas.yaml#/Order"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+  
+  delete:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Soft delete an order
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      204:
+        description: Order deleted successfully
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archived:
+  get:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Get archived orders
+    description: Retrieve a list of soft-deleted orders.
+    responses:
+      200:
+        description: List of archived orders
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/order.schemas.yaml#/Order"
+
+updateStatus:
+  patch:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Update order status
+    description: Increments trip counters based on status (InTransit, Delivered, Returned). Records status history automatically.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/order.schemas.yaml#/UpdateOrderStatusRequest"
+    responses:
+      200:
+        description: Status updated successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/order.schemas.yaml#/Order"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+transferTrip:
+  patch:
+    tags: [Orders]
+    security:
+      - bearerAuth: []
+    summary: Transfer order to another trip
+    description: Resets status to Assigned and preserves archive for previous trip.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/order.schemas.yaml#/TransferOrderRequest"
+    responses:
+      200:
+        description: Transferred successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/order.schemas.yaml#/Order"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

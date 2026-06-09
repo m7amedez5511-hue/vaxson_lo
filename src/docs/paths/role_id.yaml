@@ -1,0 +1,108 @@
+get:
+  summary: Get role by ID
+  description: Retrieve a specific role by their ID
+  tags:
+    - Role
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: Role ID (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  responses:
+    "200":
+      description: Role fetched successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/role.schemas.yaml#/RoleIdentity"
+    "404":
+      description: Role not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+put:
+  summary: Update role
+  description: Update role information 
+  tags:
+    - Role
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: Role ID (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/role.schemas.yaml#/UpdateRoleRequest"
+  responses:
+    "200":
+      description: Role updated successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/role.schemas.yaml#/RoleIdentity"
+    
+    "404":
+      description: Role not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+delete:
+  summary: Soft delete Role
+  description: Mark a role as deleted (soft delete)
+  tags:
+    - Role
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: Role ID (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+  responses:
+    "200":
+      description: Role deleted successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/role.schemas.yaml#/RoleIdentity"
+    "404":
+      description: User not found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

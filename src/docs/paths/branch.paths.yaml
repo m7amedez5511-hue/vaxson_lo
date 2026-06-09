@@ -1,0 +1,173 @@
+branchesRoot:
+  get:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Get all active branches
+    description: Retrieves a list of all active branches with support for search, sorting, and pagination.
+    parameters:
+      - name: search
+        in: query
+        description: Search term for name, email, or phone
+        schema:
+          type: string
+        example: "Riyadh"
+      - name: page
+        in: query
+        description: Page number
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        description: Items per page
+        schema:
+          type: integer
+          default: 10
+      - name: sort
+        in: query
+        description: Fields to sort by (e.g., -createdAt)
+        schema:
+          type: string
+          default: "-createdAt"
+    responses:
+      200:
+        description: A list of branches
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/branch.schemas.yaml#/BranchDetail"
+                    meta:
+                      $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+      500:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+  post:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Create a new branch
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/branch.schemas.yaml#/CreateBranchRequest"
+    responses:
+      201:
+        description: Branch created successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/branch.schemas.yaml#/BranchDetail"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+branchById:
+  get:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Get branch by ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        example: "831d6976-9e99-4a45-9a49-76ad2675af49"
+    responses:
+      200:
+        description: Branch details
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/branch.schemas.yaml#/BranchDetail"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+  patch:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Update branch details
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        example: "831d6976-9e99-4a45-9a49-76ad2675af49"
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "../components/branch.schemas.yaml#/UpdateBranchRequest"
+    responses:
+      200:
+        description: Branch updated successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/branch.schemas.yaml#/BranchDetail"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+  delete:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Soft delete a branch
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        example: "831d6976-9e99-4a45-9a49-76ad2675af49"
+    responses:
+      204:
+        description: Branch deleted successfully
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archived:
+  get:
+    tags: [Branches]
+    security:
+      - bearerAuth: []
+    summary: Get archived branches
+    description: Retrieve a list of soft-deleted branches.
+    responses:
+      200:
+        description: A list of archived branches
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/branch.schemas.yaml#/BranchDetail"

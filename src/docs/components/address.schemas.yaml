@@ -1,0 +1,216 @@
+ClientAddress:
+  type: object
+  properties:
+    _id:
+      type: string
+      example: "69e4c4030645903f39c197ae"
+    clientId:
+      type: string
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    branchName:
+      type: string
+      nullable: true
+      default: "Main Branch"
+      example: "Main Branch"
+    label:
+      type: string
+      default: "Warehouse"
+      example: "Warehouse"
+    contactPerson:
+      type: object
+      properties:
+        name:
+          type: string
+          default: "Mahmoud Ahmed"
+          example: "Mahmoud Ahmed"
+        phone:
+          type: string
+          default: "0512345678"
+          example: "0512345678"
+    details:
+      type: object
+      properties:
+        country:
+          type: string
+          default: "SA"
+          example: "SA"
+        city:
+          type: string
+          default: "Riyadh"
+          example: "Riyadh"
+        state:
+          type: string
+          default: "Riyadh Region"
+          example: "Riyadh Region"
+        district:
+          type: string
+          default: "Al Malqa"
+          example: "Al Malqa"
+        street:
+          type: string
+          default: "King Salman Rd"
+          example: "King Salman Rd"
+        buildingNo:
+          type: string
+          default: "123"
+          example: "123"
+        unitNo:
+          type: string
+          default: "10"
+          example: "10"
+        zipCode:
+          type: string
+          default: "13521"
+          example: "13521"
+    location:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Point]
+          default: "Point"
+          example: "Point"
+        coordinates:
+          type: array
+          items:
+            type: number
+          default: [46.6753, 24.7136]
+          example: [46.6753, 24.7136]
+    isValidated:
+      type: boolean
+      default: false
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+AddressCreateRequest:
+  type: object
+  required:
+    - details
+    - location
+  properties:
+    branchName:
+      type: string
+      nullable: true
+      default: "Main Branch"
+      example: "Main Branch"
+    label:
+      type: string
+      default: "General"
+      example: "General"
+    contactPerson:
+      type: object
+      properties:
+        name:
+          type: string
+          default: "Mahmoud Ahmed"
+          example: "Mahmoud Ahmed"
+        phone:
+          type: string
+          default: "0512345678"
+          example: "0512345678"
+    details:
+      type: object
+      required:
+        - city
+        - street
+      properties:
+        country:
+          type: string
+          default: "SA"
+          example: "SA"
+        city:
+          type: string
+          default: "Riyadh"
+          example: "Riyadh"
+        state:
+          type: string
+          default: "Riyadh Region"
+          example: "Riyadh Region"
+        district:
+          type: string
+          default: "Al Malqa"
+          example: "Al Malqa"
+        street:
+          type: string
+          default: "King Salman Rd"
+          example: "King Salman Rd"
+        buildingNo:
+          type: string
+          default: "123"
+          example: "123"
+        zipCode:
+          type: string
+          default: "13521"
+          example: "13521"
+    location:
+      type: object
+      required:
+        - coordinates
+      properties:
+        coordinates:
+          type: array
+          items:
+            type: number
+          default: [46.6753, 24.7136]
+          example: [46.6753, 24.7136]
+
+AddressUpdateRequest:
+  type: object
+  properties:
+    branchName:
+      type: string
+      nullable: true
+      default: "Updated Branch"
+      example: "Updated Branch"
+    label:
+      type: string
+      default: "Office"
+      example: "Office"
+    contactPerson:
+      type: object
+      properties:
+        name:
+          type: string
+          default: "Mahmoud Ahmed"
+          example: "Mahmoud Ahmed"
+        phone:
+          type: string
+          default: "0512345678"
+          example: "0512345678"
+    details:
+      type: object
+      properties:
+        country:
+          type: string
+          default: "SA"
+        city:
+          type: string
+          default: "Jeddah"
+        state:
+          type: string
+          default: "Makkah Region"
+        district:
+          type: string
+          default: "Al Rawdah"
+        street:
+          type: string
+          default: "Tahlia St"
+        buildingNo:
+          type: string
+          default: "456"
+        zipCode:
+          type: string
+          default: "23432"
+    location:
+      type: object
+      properties:
+        coordinates:
+          type: array
+          items:
+            type: number
+          default: [39.1925, 21.5433]
+          example: [39.1925, 21.5433]

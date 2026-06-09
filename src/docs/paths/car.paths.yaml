@@ -1,0 +1,169 @@
+carRoot:
+  get:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Get all cars
+    description: Retrieve a list of cars with filtering, sorting, and pagination.
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+      - name: manufacturer
+        in: query
+        schema:
+          type: string
+      - name: currentStatus
+        in: query
+        schema:
+          type: string
+          enum: [Active, InMaintenance, Inactive]
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/Utils.schemas.yaml#/SuccessResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/car.schemas.yaml#/Car'
+                    meta:
+                      $ref: '../components/Utils.schemas.yaml#/PaginationMeta'
+
+  post:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Create a new car
+    description: Registers a new car and creates an initial status history record.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/car.schemas.yaml#/CreateCarRequest'
+    responses:
+      201:
+        description: Created
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/Utils.schemas.yaml#/SuccessResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/car.schemas.yaml#/Car'
+
+carById:
+  get:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Get car by ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/Utils.schemas.yaml#/SuccessResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/car.schemas.yaml#/Car'
+
+  patch:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Update car details
+    description: Updates car info. If status changes, a new history record is created.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../components/car.schemas.yaml#/UpdateCarRequest'
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/Utils.schemas.yaml#/SuccessResponse'
+                - type: object
+                  properties:
+                    data:
+                      $ref: '../components/car.schemas.yaml#/Car'
+
+  delete:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Delete car
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      204:
+        description: No Content
+
+archived:
+  get:
+    tags:
+      - Car
+    security:
+      - bearerAuth: []
+    summary: Get archived cars
+    description: Retrieve a list of soft-deleted cars.
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/Utils.schemas.yaml#/SuccessResponse'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/car.schemas.yaml#/Car'

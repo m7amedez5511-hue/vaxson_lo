@@ -1,0 +1,37 @@
+DashboardSummary:
+  type: object
+  properties:
+    stats:
+      type: object
+      properties:
+        clients: { type: integer }
+        orders: { type: integer }
+        trips: { type: integer }
+        cars: { type: integer }
+        drivers: { type: integer }
+    alerts:
+      type: object
+      properties:
+        expiringCars:
+          type: array
+          items: { type: object }
+        expiringDrivers:
+          type: array
+          items: { type: object }
+        upcomingMaint:
+          type: array
+          items: { type: object }
+    activeTrips:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: string, format: uuid }
+          tripNumber: { type: string }
+          title: { type: string }
+          progress: { type: integer }
+    accountSecurity:
+      type: object
+      properties:
+        lastLogin: { type: string, format: date-time }
+        requestMeta: { type: object }

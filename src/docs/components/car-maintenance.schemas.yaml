@@ -1,0 +1,95 @@
+MaintenanceRecord:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "e9ab8ea8-5176-4270-be66-3bb92d2c3aca"
+    carId:
+      type: string
+      format: uuid
+      example: "64650231-e2ba-4991-b8bd-75b9682b4d8c"
+    reason:
+      type: string
+      default: "صيانة دورية"
+      example: "تغيير زيت + فحص شامل"
+    cost:
+      type: number
+      format: float
+      default: 0.0
+      example: 900.00
+    startAt:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2026-04-21T08:00:00.000Z"
+    endAt:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2026-04-21T18:00:00.000Z"
+    createdAt:
+      type: string
+      format: date-time
+      example: "2026-04-20T15:12:20.346Z"
+
+CreateMaintenanceRequest:
+  type: object
+  required:
+    - reason
+    - cost
+  properties:
+    reason:
+      type: string
+      default: "صيانة دورية"
+      example: "تغيير زيت + فحص شامل"
+    cost:
+      type: number
+      format: float
+      default: 0.0
+      example: 750.50
+    startAt:
+      type: string
+      format: date-time
+      default: null
+      example: "2026-04-21T08:00:00.000Z"
+    endAt:
+      type: string
+      format: date-time
+      default: null
+      example: "2026-04-21T18:00:00.000Z"
+
+UpdateMaintenanceRequest:
+  type: object
+  properties:
+    reason:
+      type: string
+      default: "صيانة دورية"
+      example: "تغيير زيت + فحص شامل + تغيير فلتر هواء"
+    cost:
+      type: number
+      format: float
+      default: 0.0
+      example: 900.00
+    startAt:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2026-04-21T08:00:00.000Z"
+    endAt:
+      type: string
+      format: date-time
+      nullable: true
+      default: null
+      example: "2026-04-21T20:00:00.000Z"
+
+MaintenanceResponse:
+  allOf:
+    - $ref: "./Utils.schemas.yaml#/SuccessResponse"
+    - type: object
+      properties:
+        data:
+          $ref: "./car-maintenance.schemas.yaml#/MaintenanceRecord"

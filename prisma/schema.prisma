@@ -1,0 +1,639 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Enum Types ---
+
+enum OrderStatus {
+  Created
+  Assigned
+  InTransit
+  Delivered
+  Returned
+  Cancelled
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
+enum PaymentMethod {
+  Cash
+  Card
+  Prepaid
+}
+
+enum TripStatus {
+  Scheduled
+  InProgress
+  Completed
+  Cancelled
+}
+
+enum CarStatus {
+  Active
+  InMaintenance
+  InTrip
+  Inactive
+}
+
+enum DriverStatus {
+  Active
+  Inactive
+  InTrip
+  Suspended
+}
+
+enum ClientType {
+  Individual
+  Corporate
+}
+
+enum DriverCardType {
+  Temporary
+  Seasonal
+  Annual
+  Restricted
+}
+
+enum NationalIdType {
+  NationalID
+  Iqama
+  Passport
+}
+enum NotificationEntityType {
+  DRIVER
+  CAR
+  MAINTENANCE
+}
+
+enum NotificationKind {
+  PRE_EXPIRY
+  POST_EXPIRY
+  MAINT_PRE
+  MAINT_DUE
+}
+
+enum NotificationDocType {
+  NATIONAL_ID
+  LICENSE
+  INSURANCE
+  REGISTRATION
+  MAINT_START
+  MAINT_END
+  MAINT_DUE
+}
+
+enum InsuranceStatus {
+  Valid
+  Expired
+  NotInsured
+}
+
+// --- Auth & RBAC ---
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String?
+  userName String? @map("user_name")
+  password String
+  phone    String
+  photo    String?
+  roleId   String  @map("role_id")
+  role     Role    @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  branchId String? @map("branch_id")
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Restrict)
+
+  refreshToken      String?   @map("refresh_token")
+  // Audit
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
+
+  activityLogs ActivityLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  permissions RolePermission[]
+  users       User[]
+
+  // Audit
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([name])
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(uuid())
+  name   String
+  slug   String
+  module String // e.g., "orders", "users"
+
+  roles RolePermission[]
+
+  // Audit
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([slug])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// --- Organization ---
+
+model Branch {
+  id    String  @id @default(uuid())
+  name  String
+  email String?
+  phone String?
+
+  // Address Fields
+  country    String  @default("SA")
+  city       String
+  state      String?
+  district   String?
+  street     String
+  buildingNo String? @map("building_no")
+  unitNo     String? @map("unit_no")
+  zipCode    String? @map("zip_code")
+  latitude   Float?
+  longitude  Float?
+
+  users   User[]
+  drivers Driver[]
+  cars    Car[]
+  trips   Trip[]
+
+  // Audit
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([name])
+  @@index([email])
+  @@index([phone])
+  @@map("branches")
+}
+
+model Client {
+  id           String      @id @default(uuid())
+  name         String
+  phone        String
+  userName     String?     @map("user_name")
+  password     String?
+  email        String?
+  clientType   ClientType? @default(Corporate) @map("client_type")
+  refreshToken String?     @map("refresh_token")
+
+  orders Order[]
+
+  // Audit
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
+
+  @@index([email])
+  @@index([phone])
+  @@map("clients")
+}
+
+// ClientAddress model moved to MongoDB
+
+// --- Assets (Drivers & Cars) ---
+
+model Driver {
+  id               String          @id @default(uuid())
+  name             String
+  userName         String?         @map("user_name")
+  email            String?
+  password         String?
+  address          String?
+  nationality      String?
+  nationalId       String?         @map("national_id")
+  nationalIdType   NationalIdType? @default(NationalID) @map("national_id_type")
+  nationalIdExpiry DateTime?       @map("national_id_expiry")
+  gosiNumber       String?         @map("gosi_number")
+  phone            String
+  licenseNumber    String?         @map("license_number")
+  licenseType      String?         @map("license_type")
+  licenseExpiry    DateTime?       @map("license_expiry")
+  photo            String?
+
+  notifications Notification[]
+
+  driverCardNumber String?         @map("driver_card_number")
+  driverCardType   DriverCardType? @map("driver_card_type")
+  driverCardExpiry DateTime?       @map("driver_card_expiry")
+  driverType       String?         @map("driver_type")
+  status           DriverStatus    @default(Active)
+
+  branchId String? @map("branch_id")
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  trips         Trip[]
+  statusHistory DriverStatusHistory[] @relation("DriverStatus")
+
+  // TGA Photos
+  nationalPhoto   String? @map("national_photo")
+  driverCardPhoto String? @map("driver_card_photo")
+
+  refreshToken String? @map("refresh_token")
+
+  // Audit
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  deletedAt         DateTime? @map("deleted_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
+
+  @@index([userName])
+  @@index([email])
+  @@index([nationalId])
+  @@index([phone])
+  @@index([licenseExpiry])
+  @@index([nationalIdExpiry])
+  
+  @@map("drivers")
+}
+
+model Car {
+  id           String  @id @default(uuid())
+  manufacturer String
+  model        String
+  year         Int
+  color        String?
+
+  plateNumber  String  @map("plate_number")
+  plateLetters String  @map("plate_letters")
+  plateType    String? @map("plate_type")
+
+  registrationNumber String? @map("registration_number")
+  vinNumber          String? @map("vin_number")
+  ownerNationalId    String? @map("owner_national_id")
+
+  branchId String? @map("branch_id")
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  // Usage tracking
+  actualUserId        String?   @map("actual_user_id")
+  actualUserStartDate DateTime? @map("actual_user_start_date")
+  ownershipStartDate  DateTime? @map("ownership_start_date")
+
+  // TGA & Regulatory
+  registrationIssueDate  DateTime? @map("registration_issue_date")
+  registrationExpiryDate DateTime? @map("registration_expiry_date")
+  registrationPhoto      String?   @map("registration_photo")
+
+  insuranceStatus     InsuranceStatus? @default(Valid) @map("insurance_status")
+  insuranceExpiryDate DateTime?        @map("insurance_expiry_date")
+  insurancePhoto      String?          @map("insurance_photo")
+
+  inspectionStatus     String?   @map("inspection_status")
+  inspectionExpiryDate DateTime? @map("inspection_expiry_date")
+
+  notifications Notification[]
+
+  operationCardNumber String?   @map("operation_card_number")
+  operationCardExpiry DateTime? @map("operation_card_expiry")
+
+  gpsDeviceId          String?   @map("gps_device_id")
+  currentStatus        CarStatus @default(Active) @map("current_status")
+  currentImpoundStatus String?   @map("impound_status")
+  capacity             Float?
+  weight               Float?
+
+  trips              Trip[]
+  maintenanceHistory CarMaintenanceHistory[] @relation("CarMaintenance")
+  statusHistory      CarStatusHistory[]      @relation("CarStatus")
+  images             CarImages[]             @relation("CarImages")
+
+  // Audit
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([registrationNumber])
+  @@index([vinNumber])
+  @@index([registrationExpiryDate]) 
+  @@index([insuranceExpiryDate])
+
+  @@map("cars")
+}
+
+model CarImages {
+  id            String  @id @default(uuid())
+  carId         String  @map("car_id")
+  maintenanceId String? @map("maintenance_id")
+  image         String
+  publicId      String? @map("public_id")
+  stage         String? @default("GENERAL") // BEFORE, AFTER, GENERAL
+
+  car         Car                    @relation("CarImages", fields: [carId], references: [id], onDelete: Cascade)
+  maintenance CarMaintenanceHistory? @relation("MaintenanceImages", fields: [maintenanceId], references: [id])
+
+  // Audit
+  isActive  Boolean   @default(true) @map("is_active")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("car_images")
+}
+
+model CarMaintenanceHistory {
+  id    String @id @default(uuid())
+  carId String @map("car_id")
+  car   Car    @relation("CarMaintenance", fields: [carId], references: [id], onDelete: Cascade)
+
+  reason  String
+  cost    Decimal     @db.Decimal(10, 2)
+  startAt DateTime?   @map("start_at")
+  endAt   DateTime?   @map("end_at")
+  images  CarImages[] @relation("MaintenanceImages")
+
+  createdAt     DateTime       @default(now()) @map("created_at")
+  //CRON
+  notifications Notification[]
+
+  // Audit
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([startAt])
+  @@index([endAt])
+  @@map("car_maintenance_history")
+}
+
+model CarStatusHistory {
+  id    String @id @default(uuid())
+  carId String @map("car_id")
+  car   Car    @relation("CarStatus", fields: [carId], references: [id], onDelete: Cascade)
+
+  carStatus     CarStatus @map("car_status")
+  impoundStatus String?   @map("impound_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("car_status_history")
+}
+
+model DriverStatusHistory {
+  id       String       @id @default(uuid())
+  driverId String       @map("driver_id")
+  driver   Driver       @relation("DriverStatus", fields: [driverId], references: [id], onDelete: Cascade)
+  status   DriverStatus
+  reason   String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("driver_status_history")
+}
+
+// --- Logistics Core ---
+
+model Trip {
+  id          String  @id @default(uuid())
+  tripNumber  String  @unique @map("trip_number")
+  title       String
+  description String?
+
+  driverId String @map("driver_id")
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  carId String @map("car_id")
+  car   Car    @relation(fields: [carId], references: [id], onDelete: Restrict)
+
+  startTime DateTime  @map("start_time")
+  endTime   DateTime? @map("end_time")
+
+  collectedCount Int @default(0) @map("collected_count")
+  deliveredCount Int @default(0) @map("delivered_count")
+  returnedCount  Int @default(0) @map("returned_count")
+
+  totalCashCollected Decimal? @default(0.00) @map("total_cash_collected") @db.Decimal(10, 2)
+
+  endReason String?    @map("end_reason")
+  notes     String?
+  status    TripStatus @default(Scheduled)
+
+  orders Order[]
+
+
+  branchId String? @map("branch_id")
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  reportFile String? @map("report_file")
+
+  // Audit
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([driverId])
+  @@index([carId])
+  @@index([branchId])
+  @@index([tripNumber])
+  @@map("trips")
+}
+
+model Order {
+  id             String @id @default(uuid())
+  shipmentNumber String @map("shipment_number")
+
+  recipientName  String @map("recipient_name")
+  recipientPhone String @map("recipient_phone")
+
+  // Hybrid Address Fields (get from mongodb)
+  pickupAddressId   String? @map("pickup_address_id")
+  deliveryAddressId String? @map("delivery_address_id")
+
+  // ZATCA / Financial
+  subTotal   Decimal? @map("sub_total") @db.Decimal(10, 2)
+  vatRate    Decimal? @default(15.00) @map("vat_rate") @db.Decimal(5, 2)
+  vatAmount  Decimal? @map("vat_amount") @db.Decimal(10, 2)
+  totalPrice Decimal? @map("total_price") @db.Decimal(10, 2)
+
+  paymentMethod    PaymentMethod? @map("payment_method")
+  paymentStatus    PaymentStatus? @default(Pending) @map("payment_status")
+  taxInvoiceNumber String?        @map("tax_invoice_number")
+  qrCode           String?        @map("qr_code")
+
+  // Order Details
+  currentStatus OrderStatus @default(Created) @map("current_status")
+  type          String?
+  quantity      Int         @default(1)
+  weight        Float?
+
+  tripId String? @map("trip_id")
+  trip   Trip?   @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  clientId String? @map("client_id")
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  statusHistory OrderStatusHistory[]
+  images        OrderImage[]
+
+  // Audit
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([tripId])
+  @@index([clientId])
+  @@index([currentStatus])
+  @@index([recipientPhone])
+  @@index([shipmentNumber])
+  @@map("orders")
+}
+
+model OrderStatusHistory {
+  id      String @id @default(uuid())
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  status OrderStatus
+  reason String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_status_history")
+}
+
+model OrderImage {
+  id      String @id @default(uuid())
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  imageUrl String  @map("image_url")
+  publicId String? @map("public_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("order_images")
+}
+
+model ActivityLog {
+  id String @id @default(uuid())
+
+  // Who performed the action
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Action Details
+  action      String // e.g., "CREATE", "UPDATE", "DELETE", "STATUS_CHANGE"
+  module      String // e.g., "Order", "Driver", "Trip"
+  recordId    String // ID of the modified record
+  description String? // Arabic description for the UI
+
+  // Data History (JSONB in Postgres)
+  oldData Json? @map("old_data")
+  newData Json? @map("new_data")
+
+  // Result Status
+  status       String  @default("SUCCESS") // e.g., "SUCCESS", "FAILED"
+  errorMessage String? @map("error_message")
+
+  // Request Metadata
+  requestMeta Json? @map("request_meta") // Stores IP, Device, OS, Location, etc.
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([module, recordId])
+  @@map("activity_logs")
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+// Durable record of every reminder sent. The composite unique key
+// (entityType, entityId, docType, kind, targetDate) is the dedup key:
+// - entityType: "driver" | "car" | "maintenance"
+// - entityId: FK to Driver / Car / CarMaintenanceHistory
+// - docType: "license" | "nationalId" | "registration" | "insurance" | "maintStart" | "maintDue"
+// - kind: "PRE_EXPIRY" | "POST_EXPIRY" | "MAINT_PRE" | "MAINT_DUE"
+// - targetDate: anchor date of the reminder window (startOf day, Riyadh tz, stored as UTC)
+//
+// When a document is renewed, the expiry date changes → next run computes a new
+// targetDate → new unique key → natural new reminder cycle. No cleanup job needed.
+
+model Notification {
+  id         String @id @default(uuid())
+  entityType NotificationEntityType @map("entity_type")
+  docType    NotificationDocType    @map("doc_type")
+  kind       NotificationKind
+
+  // The anchor date for this reminder window (startOf day UTC).
+  targetDate DateTime @map("target_date") @db.Date
+
+  sentAt   DateTime @default(now()) @map("sent_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  // "queued" → SMS enqueued in BullMQ
+  // "sent"   → SMS worker confirmed delivery
+  // "failed" → exhausted retries
+  status   String   @default("queued")
+  smsJobId String?  @map("sms_job_id")
+
+  // Polymorphic back-relations (only one is non-null per row).
+  driverId String? @map("driver_id")
+  driver   Driver? @relation(fields: [driverId], references: [id], onDelete: SetNull)
+
+  carId String? @map("car_id")
+  car   Car?    @relation(fields: [carId], references: [id], onDelete: SetNull)
+
+  requeueCount  Int      @default(0)
+
+  maintenanceId String?                @map("maintenance_id")
+  maintenance   CarMaintenanceHistory? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, docType, kind, targetDate, driverId, carId, maintenanceId])
+  @@index([targetDate])
+  @@index([status])
+  @@map("notifications")
+}

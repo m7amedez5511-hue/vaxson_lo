@@ -1,0 +1,88 @@
+auditRoot:
+  get:
+    summary: Get Activity Logs
+    description: Retrieve a paginated and filtered list of all system activities/audit logs.
+    tags:
+      - Audit
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+      - name: name
+        in: query
+        description: Search by user name or userName
+        schema:
+          type: string
+      - name: module
+        in: query
+        description: Filter by module (e.g. Branch, User, Order)
+        schema:
+          type: string
+      - name: action
+        in: query
+        description: Filter by action (e.g. CREATE_BRANCH, UPDATE_USER)
+        schema:
+          type: string
+      - name: fromDate
+        in: query
+        description: Filter from date (YYYY-MM-DD)
+        schema:
+          type: string
+          format: date
+      - name: toDate
+        in: query
+        description: Filter to date (YYYY-MM-DD)
+        schema:
+          type: string
+          format: date
+    responses:
+      "200":
+        description: Activities fetched successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/audit.schemas.yaml#/ActivityLogListResponse"
+      "401":
+        description: Unauthorized
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+auditById:
+  get:
+    summary: Get Activity Log Details
+    description: Get full details of a specific activity log entry by ID.
+    tags:
+      - Audit
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Activity details fetched successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/audit.schemas.yaml#/ActivityLogDetailResponse"
+      "404":
+        description: Activity log not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

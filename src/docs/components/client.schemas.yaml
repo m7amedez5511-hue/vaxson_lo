@@ -1,0 +1,108 @@
+ClientIdentity:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the client (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    name:
+      type: string
+      description: The legal name or identifier of the client
+      example: "Mega Logistics Global"
+    email:
+      type: string
+      description: Primary contact email address
+      example: "contact@megalogistics.sa"
+    phone:
+      type: string
+      description: Contact phone number
+      example: "0566778899"
+    isActive:
+      type: boolean
+      description: Status indicating if the client is currently active
+      example: true
+    isDeleted:
+      type: boolean
+      description: Soft-delete flag
+      example: false
+    clientType:
+      type: string
+      enum: ["Individual", "Corporate"]
+      description: Category of the client
+      example: "Corporate"
+    createdAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of record creation
+      example: "2026-04-16T12:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of the last update
+      example: "2026-04-16T12:30:00.000Z"
+
+ClientDetail:
+  allOf:
+    - $ref: "#/ClientIdentity"
+    - type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: "address.schemas.yaml#/ClientAddress"
+          description: List of physical/mailing addresses (Only returned in Detail views)
+
+CreateClientRequest:
+  type: object
+  required:
+    - name
+    - phone
+    - email
+  properties:
+    name:
+      type: string
+      description: Full name or Company name
+      example: "Slash Logistics"
+      default: "Slash Logistics"
+    email:
+      type: string
+      description: Unique email for the client
+      example: "owner@slash.sa"
+      default: "owner@slash.sa"
+    phone:
+      type: string
+      description: Mobile number
+      example: "0501112223"
+      default: "0501112223"
+    clientType:
+      type: string
+      enum: ["Individual", "Corporate"]
+      description: Type of client entity
+      example: "Corporate"
+      default: "Corporate"
+
+UpdateClientRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Slash Logistics Inc."
+      default: "Slash Logistics Inc."
+    email:
+      type: string
+      example: "ceo@slash.sa"
+      default: "ceo@slash.sa"
+    phone:
+      type: string
+      example: "0509998877"
+      default: "0509998877"
+    clientType:
+      type: string
+      enum: ["Individual", "Corporate"]
+      example: "Corporate"
+      default: "Corporate"
+    isActive:
+      type: boolean
+      description: Status indicating if the client is active
+      example: true
+      default: true

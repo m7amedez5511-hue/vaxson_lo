@@ -1,0 +1,228 @@
+Order:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the order
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    shipmentNumber:
+      type: string
+      description: Unique shipment number/reference
+      example: "SHIP-123456789"
+      default: "SHIP-123456789"
+    recipientName:
+      type: string
+      description: Name of the person receiving the shipment
+      example: "Ahmed Mohamed Ali"
+      default: "Ahmed Mohamed Ali"
+    recipientPhone:
+      type: string
+      description: Contact phone of the recipient
+      example: "0501112223"
+      default: "0501112223"
+    clientId:
+      type: string
+      format: uuid
+      description: ID of the client who owns the order
+      example: "d4bb6f64-6075-470c-9118-9b2b3407b765"
+      default: "d4bb6f64-6075-470c-9118-9b2b3407b765"
+    tripId:
+      type: string
+      format: uuid
+      description: ID of the trip assigned to this order
+      example: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+      default: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+    pickupAddressId:
+      type: string
+      description: MongoDB ID of the pickup address
+      example: "643f1b2c9d3e4b5a6c7d8e9e"
+    deliveryAddressId:
+      type: string
+      description: MongoDB ID of the delivery address
+      example: "643f1b2c9d3e4b5a6c7d8e9f"
+    currentStatus:
+      type: string
+      enum: [Created, Assigned, InTransit, Delivered, Returned, Cancelled]
+      description: Current operational status of the order
+      example: "InTransit"
+      default: "InTransit"
+    quantity:
+      type: integer
+      description: Total items or weight units
+      example: 1
+      default: 1
+    subTotal:
+      type: number
+      description: Total price/value of the order
+      example: 150.75
+      default: 150.75
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp of order creation
+      example: "2026-04-21T12:00:00.000Z"
+      default: "2026-04-21T12:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp of last update
+      example: "2026-04-21T12:30:00.000Z"
+      default: "2026-04-21T12:30:00.000Z"
+    statusHistory:
+      type: array
+      items:
+        $ref: "#/OrderStatusHistory"
+      description: Chronological list of status changes
+
+OrderStatusHistory:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the history record
+      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      default: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    status:
+      type: string
+      description: Status at this point in time
+      example: "InTransit"
+      default: "InTransit"
+    reason:
+      type: string
+      description: Optional comment or reason for the status change
+      example: "Driver picked up from warehouse"
+      default: "Driver picked up from warehouse"
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp of the status change
+      example: "2026-04-21T12:15:00.000Z"
+      default: "2026-04-21T12:15:00.000Z"
+
+CreateOrderRequest:
+  type: object
+  required:
+    - shipmentNumber
+    - recipientName
+    - recipientPhone
+    - clientId
+    - quantity
+    - subTotal
+  properties:
+    shipmentNumber:
+      type: string
+      description: Unique shipment number
+      example: "SHIP-999000111"
+      default: "SHIP-999000111"
+    recipientName:
+      type: string
+      description: Recipient's full name
+      example: "Fahad Al-Qahtani"
+      default: "Fahad Al-Qahtani"
+    recipientPhone:
+      type: string
+      description: Recipient's Saudi mobile number
+      example: "0550001111"
+      default: "0550001111"
+    clientId:
+      type: string
+      format: uuid
+      description: UUID of the client
+      example: "d4bb6f64-6075-470c-9118-9b2b3407b765"
+      default: "d4bb6f64-6075-470c-9118-9b2b3407b765"
+    tripId:
+      type: string
+      format: uuid
+      description: Optional trip assignment
+      example: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+      default: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+    quantity:
+      type: integer
+      description: Item count
+      example: 1
+      default: 1
+    subTotal:
+      type: number
+      description: Order subtotal
+      example: 200.00
+      default: 200.00
+    # --- Hybrid Address Logic ---
+    # You can provide EITHER an ID of an existing address OR a full address object to be created.
+    
+    pickupAddressId:
+      type: string
+      format: uuid
+      description: MongoDB ID of an existing pickup address (e.g., stored Client Warehouse)
+      example: "643f1b2c9d3e4b5a6c7d8e9f"
+      default: "643f1b2c9d3e4b5a6c7d8e9f"
+    
+    pickupAddress:
+      $ref: "#/orderAddress"
+      description: Full object to create a NEW pickup address in MongoDB on-the-fly.
+
+    deliveryAddressId:
+      type: string
+      format: uuid
+      description: MongoDB ID of an existing delivery address.
+      example: "643f1b2c9d3e4b5a6c7d8e9a"
+      default: "643f1b2c9d3e4b5a6c7d8e9a"
+      
+    deliveryAddress:
+      $ref: "#/orderAddress"
+      description: Full object to create a NEW delivery address in MongoDB on-the-fly.
+
+orderAddress:
+  type: object
+  description: Simplified address structure for Order creation
+  properties:
+    details:
+      type: object
+      required: [city, street]
+      properties:
+        city: { type: string, example: "Riyadh" }
+        street: { type: string, example: "King Fahd Rd" }
+        district: { type: string, example: "Olaya" }
+        state: { type: string, example: "Riyadh Region" }
+        country: { type: string, default: "SA", example: "SA" }
+        zipCode: { type: string, example: "12345" }
+    location:
+      type: object
+      properties:
+        type: { type: string, default: "Point" }
+        coordinates:
+          type: array
+          items: { type: number }
+          example: [46.6753, 24.7136]
+          description: "[longitude, latitude]"
+
+UpdateOrderStatusRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      enum: [Created, Assigned, InTransit, Delivered, Returned, Cancelled]
+      description: The new status to apply
+      example: "InTransit"
+      default: "InTransit"
+    reason:
+      type: string
+      description: Optional comment or reason for the status change
+      example: "Order picked up by driver"
+      default: "Order picked up by driver"
+
+TransferOrderRequest:
+  type: object
+  required:
+    - tripId
+  properties:
+    tripId:
+      type: string
+      format: uuid
+      description: The ID of the new trip to transfer the order to
+      example: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+      default: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"

@@ -1,0 +1,55 @@
+services:
+  logistic-app:
+    volumes:
+      - ./src:/app/src
+      - ./public/uploads:/app/public/uploads
+    build:
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - SKIP_PRISMA_GENERATE=false
+      - RUN_DB_SEED=true
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:8080}
+      - API_SERVER_NAME=${API_SERVER_NAME:-localhost}
+
+  logistic-worker:
+    volumes:
+      - ./src:/app/src:ro
+    build:
+      context: .
+      target: development
+    environment:
+      - NODE_ENV=development
+      - SKIP_PRISMA_GENERATE=false
+
+  nginx:
+    ports:
+      - "8080:80"
+    environment:
+      API_SERVER_NAME: ${API_SERVER_NAME:-localhost}
+      API_UPSTREAM_HOST: logistic-app
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  mongo:
+    ports:
+      - "27017:27017"
+
+  pgweb:
+    profiles: []
+    ports:
+      - "5051:8081"
+
+  mongo-express:
+    profiles: []
+    ports:
+      - "8081:8081"

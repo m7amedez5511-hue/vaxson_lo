@@ -1,0 +1,175 @@
+imagesRoot:
+  post:
+    tags:
+      - Car Images
+    summary: Upload Car or Maintenance Images
+    description: |
+      Upload up to 6 images for a specific vehicle. 
+      - If **maintenanceId** is provided, these images will be linked to that specific maintenance record.
+      - If **maintenanceId** is omitted, the images will be general car photos.
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Car ID (UUID)
+        schema:
+          type: string
+          format: uuid
+          default: "f70ce17b-649e-4cb8-a34e-d18f93d42730"
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - images
+            properties:
+              images:
+                type: array
+                description: Choose up to 6 image files.
+                minItems: 1
+                maxItems: 6
+                items:
+                  type: string
+                  format: binary
+              stage:
+                type: string
+                enum: [BEFORE, AFTER, GENERAL]
+                default: GENERAL
+                description: Stage of the car (e.g., BEFORE or AFTER maintenance)
+              maintenanceId:
+                type: string
+                format: uuid
+                description: Optional. The ID of the maintenance record.
+          encoding:
+            images:
+              contentType: image/png, image/jpeg, image/jpg
+    responses:
+      201:
+        description: Images uploaded successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/car-image.schemas.yaml#/AddCarImagesResponse"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  get:
+    tags:
+      - Car Images
+    summary: Get all images for a specific car
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique ID of the car
+        schema:
+          type: string
+          format: uuid
+          default: "f70ce17b-649e-4cb8-a34e-d18f93d42730"
+      - name: day
+        in: query
+        schema: { type: integer }
+      - name: month
+        in: query
+        schema: { type: integer }
+      - name: year
+        in: query
+        schema: { type: integer }
+      - name: sortBy
+        in: query
+        schema:
+          type: string
+          enum: [asc, desc]
+          default: desc
+    responses:
+      200:
+        description: List of images
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/car-image.schemas.yaml#/CarImage"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archiveRoot:
+  get:
+    tags:
+      - Car Images
+    summary: Get archived (deleted) images for a specific car
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique ID of the car
+        schema:
+          type: string
+          format: uuid
+          default: "f70ce17b-649e-4cb8-a34e-d18f93d42730"
+    responses:
+      200:
+        description: List of archived images
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/car-image.schemas.yaml#/CarImage"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+imageById:
+  delete:
+    tags:
+      - Car Images
+    summary: Delete a specific car image (Soft Delete)
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: imageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Image deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+      401:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

@@ -1,0 +1,187 @@
+post:
+  summary: Create a new role
+  description: Adds a new role to the system with basic identity information. 
+  tags:
+    - Role
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/role.schemas.yaml#/CreateRoleRequest"
+  responses:
+    "201":
+      description: Role created successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "../components/role.schemas.yaml#/RoleIdentity"
+    "400":
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+    
+get:
+  summary: Get all Roles
+  description: Retrieve a paginated list of Role with search and filtering options.
+  tags:
+    - Role
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+      example: 1
+      description: Page number to retrieve
+    - in: query
+      name: limit
+      schema:
+        type: integer
+        default: 10
+      example: 10
+      description: Number of items per page
+    - in: query
+      name: search
+      schema:
+        type: string
+      example: "Slash"
+      description: Search term for name, description
+    - in: query
+      name: sort
+      schema:
+        type: string
+        default: "-createdAt"
+      example: "-createdAt,name"
+      description: |
+        Sort results by fields.
+        - **Ascending:** `field` (e.g., `name`).
+        - **Descending:** `-field` (e.g., `-createdAt`).
+        - **Multi-sort:** `field1,field2`
+    - in: query
+      name: isActive
+      schema:
+        type: boolean
+      example: true
+      description: Filter by activity status
+  responses:
+    "200":
+      description: roles fetched successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "../components/role.schemas.yaml#/RoleIdentity"
+
+archived:
+  get:
+    summary: Get archived roles
+    description: Retrieve a paginated list of soft-deleted roles.
+    tags:
+      - Role
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        example: 1
+        description: Page number to retrieve
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+        example: 10
+        description: Number of items per page
+      - in: query
+        name: search
+        schema:
+          type: string
+        example: "Slash"
+        description: Search term for name or description
+      - in: query
+        name: sort
+        schema:
+          type: string
+          default: "-createdAt"
+        example: "-createdAt,name"
+        description: |
+          Sort results by fields.
+          - **Ascending:** `field` (e.g., `name`).
+          - **Descending:** `-field` (e.g., `-createdAt`).
+          - **Multi-sort:** `field1,field2`
+      - in: query
+        name: isActive
+        schema:
+          type: boolean
+        example: true
+        description: Filter by activity status
+    responses:
+      "200":
+        description: archived roles fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: "../components/role.schemas.yaml#/RoleIdentity"
+
+archivedById:
+  get:
+    summary: Get archived role by ID
+    description: Retrieve a soft-deleted role by its ID.
+    tags:
+      - Role
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: Role ID (UUID)
+        example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    responses:
+      "200":
+        description: Archived role fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/role.schemas.yaml#/RoleIdentity"
+      "404":
+        description: Role not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

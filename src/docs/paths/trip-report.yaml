@@ -1,0 +1,87 @@
+tripReport:
+  get:
+    tags:
+      - Trip Reports
+    summary: Generate Trip Manifest Report
+    description: Generates a professional HTML trip manifest report and returns its public URL.
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: "dd155f62-b4d9-4ae1-871c-7dd90e708127"
+        description: The ID of the trip to generate the report for.
+    responses:
+      '200':
+        description: Successfully generated report.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        reportUrl:
+                          type: string
+                          example: "http://localhost:3000/public/uploads/trip-reports/trip-manifest-TRIP-REAL-1778013953360-1778064590380.html"
+      '401':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      '403':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      '404':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+tripClientReport:
+  get:
+    tags:
+      - Trip Reports
+    summary: Generate Trip Manifest Report for a specific Client
+    description: Generates an HTML trip manifest report filtered for a specific client within the trip.
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: "dd155f62-b4d9-4ae1-871c-7dd90e708127"
+        description: The ID of the trip.
+      - in: path
+        name: clientId
+        required: true
+        schema:
+          type: string
+          format: uuid
+          default: "f70ce17b-649e-4cb8-a34e-d18f93d42730"
+        description: The ID of the client to filter by.
+    responses:
+      '200':
+        description: Successfully generated report.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        reportUrl:
+                          type: string
+                          example: "http://localhost:3000/public/uploads/trip-reports/trip-manifest-TRIP-REAL-1778013953360-1778064590380.html"
+      '401':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      '403':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      '404':
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

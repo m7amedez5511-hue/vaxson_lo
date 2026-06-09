@@ -1,0 +1,70 @@
+PaginationMeta:
+  type: object
+  properties:
+    total:
+      type: integer
+      example: 100
+      description: Total number of records found
+    page:
+      type: integer
+      example: 1
+      description: Current page number
+    limit:
+      type: integer
+      example: 10
+      description: Number of records per page
+    totalPages:
+      type: integer
+      example: 10
+      description: Total number of pages available
+
+SuccessResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: true
+    message:
+      type: string
+      example: "Operation successful"
+    responseAt:
+      type: string
+      format: date-time
+      example: "2026-04-21T12:00:00.000Z"
+
+ErrorResponse:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: false
+    message:
+      type: string
+      example: "An error occurred"
+    responseAt:
+      type: string
+      format: date-time
+      example: "2026-04-21T12:00:00.000Z"
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "validation_failed"
+        path:
+          type: string
+          example: "/api/v1/resource"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+
+bearerAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT

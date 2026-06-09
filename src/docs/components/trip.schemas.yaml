@@ -1,0 +1,246 @@
+Trip:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the trip
+      example: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+      default: "9b2d0223-6f27-4c9f-bf7b-ac0ce50d97fb"
+    tripNumber: 
+      type: string
+      description: Unique numer for the trip
+      example: "TRIP-20260426-2a.la"
+      default: "TRIP-20260426-2a.la"
+    title: 
+      type: string
+      description: title for the trip
+      example: "trep branch Riyadh City"
+      default: "trep branch Riyadh City"
+      
+    driverId:
+      type: string
+      format: uuid
+      description: ID of the assigned driver
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    carId:
+      type: string
+      format: uuid
+      description: ID of the assigned car
+      example: "c27b6f64-6075-470c-9118-9b2b3407b888"
+      default: "c27b6f64-6075-470c-9118-9b2b3407b888"
+    startTime:
+      type: string
+      format: date-time
+      description: Trip start timestamp
+      example: "2026-04-21T08:00:00.000Z"
+      default: "2026-04-21T08:00:00.000Z"
+    endTime:
+      type: string
+      format: date-time
+      nullable: true
+      description: Trip end timestamp when trip is completed/cancelled
+      example: "2026-04-21T17:30:00.000Z"
+      default: "2026-04-21T17:30:00.000Z"
+    collectedCount:
+      type: integer
+      description: Number of orders collected during trip
+      example: 20
+      default: 0
+    deliveredCount:
+      type: integer
+      description: Number of orders delivered during trip
+      example: 18
+      default: 0
+    returnedCount:
+      type: integer
+      description: Number of returned orders during trip
+      example: 2
+      default: 0
+    totalCashCollected:
+      type: number
+      description: Total cash amount collected in this trip
+      example: 1250.50
+      default: 0
+    endReason:
+      type: string
+      nullable: true
+      description: Reason for ending or cancelling trip
+      example: "Finished all assigned orders"
+      default: "Finished all assigned orders"
+    notes:
+      type: string
+      nullable: true
+      description: Internal notes related to this trip
+      example: "Driver requested route adjustment near noon"
+      default: "Driver requested route adjustment near noon"
+    status:
+      type: string
+      enum: [Scheduled, InProgress, Completed, Cancelled]
+      description: Operational status of the trip
+      example: "InProgress"
+      default: "Scheduled"
+    car:
+      type: object
+      description: Assigned car basic details
+      nullable: true
+    driver:
+      type: object
+      description: Assigned driver basic details
+      nullable: true
+    orders:
+      type: array
+      description: Orders associated with this trip
+      items:
+        type: object
+    isDeleted:
+      type: boolean
+      description: Soft delete flag
+      example: false
+      default: false
+    deletedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when record was soft-deleted
+      example: "2026-04-21T18:00:00.000Z"
+      default: "2026-04-21T18:00:00.000Z"
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp of trip creation
+      example: "2026-04-21T08:00:00.000Z"
+      default: "2026-04-21T08:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp of last update
+      example: "2026-04-21T12:30:00.000Z"
+      default: "2026-04-21T12:30:00.000Z"
+
+CreateTripRequest:
+  type: object
+  required:
+    - driverId
+    - carId
+    - startTime
+  properties:
+    driverId:
+      type: string
+      format: uuid
+      description: UUID of the driver to assign
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    carId:
+      type: string
+      format: uuid
+      description: UUID of the car to assign
+      example: "c27b6f64-6075-470c-9118-9b2b3407b888"
+      default: "c27b6f64-6075-470c-9118-9b2b3407b888"
+    startTime:
+      type: string
+      format: date-time
+      description: Planned trip start time
+      example: "2026-04-21T08:00:00.000Z"
+      default: "2026-04-21T08:00:00.000Z"
+    endTime:
+      type: string
+      format: date-time
+      description: Optional planned trip end time
+      example: "2026-04-21T17:00:00.000Z"
+      default: "2026-04-21T17:00:00.000Z"
+    collectedCount:
+      type: integer
+      description: Initial collected count
+      example: 0
+      default: 0
+    deliveredCount:
+      type: integer
+      description: Initial delivered count
+      example: 0
+      default: 0
+    returnedCount:
+      type: integer
+      description: Initial returned count
+      example: 0
+      default: 0
+    totalCashCollected:
+      type: number
+      description: Initial total cash collected
+      example: 0
+      default: 0
+    endReason:
+      type: string
+      description: Optional reason for ending/cancelling the trip
+      example: "Cancelled due to weather conditions"
+      default: "Cancelled due to weather conditions"
+    notes:
+      type: string
+      description: Optional internal notes
+      example: "Handle fragile shipments first"
+      default: "Handle fragile shipments first"
+    status:
+      type: string
+      enum: [Scheduled, InProgress, Completed, Cancelled]
+      description: Trip status
+      example: "Scheduled"
+      default: "Scheduled"
+
+UpdateTripRequest:
+  type: object
+  properties:
+    driverId:
+      type: string
+      format: uuid
+      description: New driver UUID (if reassigning)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      default: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    carId:
+      type: string
+      format: uuid
+      description: New car UUID (if reassigning)
+      example: "c27b6f64-6075-470c-9118-9b2b3407b888"
+      default: "c27b6f64-6075-470c-9118-9b2b3407b888"
+    endTime:
+      type: string
+      format: date-time
+      description: Actual trip end time
+      example: "2026-04-21T17:30:00.000Z"
+      default: "2026-04-21T17:30:00.000Z"
+    collectedCount:
+      type: integer
+      description: Updated collected count
+      example: 20
+      default: 0
+    deliveredCount:
+      type: integer
+      description: Updated delivered count
+      example: 18
+      default: 0
+    returnedCount:
+      type: integer
+      description: Updated returned count
+      example: 2
+      default: 0
+    totalCashCollected:
+      type: number
+      description: Updated total cash collected
+      example: 1250.50
+      default: 0
+    endReason:
+      type: string
+      description: Reason for finishing/cancelling trip
+      example: "Trip completed with all stops covered"
+      default: "Trip completed with all stops covered"
+    notes:
+      type: string
+      description: Additional notes
+      example: "One delivery delayed by traffic"
+      default: "One delivery delayed by traffic"
+    status:
+      type: string
+      enum: [Scheduled, InProgress, Completed, Cancelled]
+      description: Updated trip status
+      example: "Completed"
+      default: "Scheduled"

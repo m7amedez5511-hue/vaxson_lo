@@ -1,0 +1,140 @@
+RoleIdentity:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the Role (UUID)
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    name:
+      type: string
+      description: The legal name or identifier of the role
+      example: "Head Manger"
+    description:
+      type: string
+      description: Descrip This role
+      example: "Mange Users"  
+      
+    isActive:
+      type: boolean
+      description: Status indicating if the role is currently active
+      example: true
+    isDeleted:
+      type: boolean
+      description: Soft-delete flag
+      example: false
+    createdAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of record creation
+      example: "2026-04-16T12:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: ISO timestamp of the last update
+      example: "2026-04-16T12:30:00.000Z"      
+CreateRoleRequest:
+  type: object
+  required:
+    - name
+    - description
+    - permissions
+  
+  properties:
+    name:
+      type: string
+      description: Role name 
+      example: "Head Manger"
+      default: "Head Manger"
+    description:
+      type: string
+      description: Role description
+      example: "Mange Company"
+      default: "Mange Company"
+    permissions:
+      type: array
+      description: Permission Of This Role
+      example: "[create , update]"
+      default: "[]"  
+UpdateRoleRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Role name 
+      example: "Head Manger"
+      default: "Head Manger"
+    description:
+      type: string
+      description: Role description
+      example: "Mange Company"
+      default: "Mange Company"
+    permissions:
+      type: array
+      description: Permission Of This Role
+      example: "[create , update]"
+      default: "[]"  
+    isActive:
+      type: boolean
+      example: true
+
+RoleListResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "Role fetched successfully"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        users:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/RoleIdentity"
+            meta:
+              $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+RoleUpdateResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "Role.update_successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        user:
+          $ref: "#/RoleIdentity"
+
+RoleDeleteResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "Role.delete_successfuly"
+    success:
+      type: boolean
+      example: true
+    responseAt:
+      type: string
+      format: date-time
+    data:
+      type: object
+      properties:
+        user:
+          $ref: "#/RoleIdentity"
+      default: true
+                  

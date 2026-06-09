@@ -1,0 +1,276 @@
+tripRoot:
+  get:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Get all active trips
+    description: Retrieves a list of trips with support for search, filtering, sorting, and pagination.
+    parameters:
+      - name: search
+        in: query
+        description: Search term for carId, driverId, startTime, collectedCount, or status
+        schema:
+          type: string
+        example: "InProgress"
+      - name: status
+        in: query
+        description: Filter by trip status
+        schema:
+          type: string
+          enum: [Scheduled, InProgress, Completed, Cancelled]
+      - name: driverId
+        in: query
+        description: Filter by driver ID
+        schema:
+          type: string
+          format: uuid
+      - name: carId
+        in: query
+        description: Filter by car ID
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+      - name: sort
+        in: query
+        schema:
+          type: string
+          default: "-createdAt"
+    responses:
+      200:
+        description: List of trips fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: "../components/trip.schemas.yaml#/Trip"
+                        pagination:
+                          $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+      500:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archived:
+  get:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Get archived trips
+    description: Retrieve a paginated list of soft-deleted trips.
+    parameters:
+      - name: search
+        in: query
+        description: Search term for carId, driverId, startTime, collectedCount, or status
+        schema:
+          type: string
+        example: "Completed"
+      - name: status
+        in: query
+        description: Filter by trip status
+        schema:
+          type: string
+          enum: [Scheduled, InProgress, Completed, Cancelled]
+      - name: driverId
+        in: query
+        description: Filter by driver ID
+        schema:
+          type: string
+          format: uuid
+      - name: carId
+        in: query
+        description: Filter by car ID
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 10
+      - name: sort
+        in: query
+        schema:
+          type: string
+          default: "-createdAt"
+    responses:
+      200:
+        description: Archived trips fetched successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        data:
+                          type: array
+                          items:
+                            $ref: "../components/trip.schemas.yaml#/Trip"
+                        pagination:
+                          $ref: "../components/Utils.schemas.yaml#/PaginationMeta"
+      500:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+archivedById:
+  get:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Get archived trip by ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Archived trip details
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/trip.schemas.yaml#/Trip"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  post:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Create a new trip
+    description: Creates a trip and assigns selected active driver and car.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/trip.schemas.yaml#/CreateTripRequest"
+    responses:
+      201:
+        description: Trip created successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/trip.schemas.yaml#/Trip"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+tripById:
+  get:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Get trip details by ID
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Trip details
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/trip.schemas.yaml#/Trip"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  patch:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Update trip by ID
+    description: Updates trip fields, and can reassign driver/car or close/cancel the trip.
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/trip.schemas.yaml#/UpdateTripRequest"
+    responses:
+      200:
+        description: Trip updated successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/trip.schemas.yaml#/Trip"
+      400:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+
+  delete:
+    tags: [Trip]
+    security:
+      - bearerAuth: []
+    summary: Soft delete a trip
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      204:
+        description: Trip deleted successfully
+      404:
+        $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
