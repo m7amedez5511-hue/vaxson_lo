@@ -1,0 +1,122 @@
+permissionsRoot:
+  post:
+    summary: Assign a permission to a role
+    description: |
+      Links an existing permission to the specified role.
+      Returns `409 Conflict` if the permission is already assigned.
+      Requires the **manage-role-permissions** system permission.
+    tags:
+      - Role
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Role ID (UUID)
+        example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/role_permissions.schemas.yaml#/AssignPermissionRequest"
+    responses:
+      "201":
+        description: Permission assigned successfully
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/Utils.schemas.yaml#/SuccessResponse"
+                - type: object
+                  properties:
+                    data:
+                      $ref: "../components/role_permissions.schemas.yaml#/RolePermissionRecord"
+      "400":
+        description: Validation error (missing or malformed permissionId)
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthenticated — bearer token missing or expired
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "403":
+        description: Forbidden — caller lacks manage-role-permissions
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "404":
+        description: Role or Permission not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "409":
+        description: Permission already assigned to this role
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+            example:
+              success: false
+              message: "Permission_Already_Assigned"
+
+permissionById:
+  delete:
+    summary: Remove a permission from a role
+    description: |
+      Unlinks the specified permission from the role (soft delete).
+      Returns `404` if the role does not exist, or if the permission
+      is not currently assigned to the role.
+      Requires the **manage-role-permissions** system permission.
+    tags:
+      - Role
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Role ID (UUID)
+        example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+      - in: path
+        name: permissionId
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Permission ID (UUID) to remove from the role
+        example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    responses:
+      "204":
+        description: Permission removed successfully (no body)
+      "401":
+        description: Unauthenticated
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "403":
+        description: Forbidden — caller lacks manage-role-permissions
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"
+      "404":
+        description: Role not found, or permission not assigned to this role
+        content:
+          application/json:
+            schema:
+              $ref: "../components/Utils.schemas.yaml#/ErrorResponse"

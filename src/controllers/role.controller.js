@@ -100,19 +100,18 @@ export const softDeletedRole = asyncHandler(async (req,res,nest)=>{
 })
 
 export const assignPermissionToRole = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
-  const { permissionId } = req.body;
+  const { id } = req.params;           // roleId from URL
+  const { permissionId } = req.body;   // permissionId from body
 
   const result = await assignPermissionToRoleActivity(req, id, permissionId);
-  
 
   sendResponse(res, 201, "Permission assigned successfully", result);
 });
 
 export const removePermissionFromRole = asyncHandler(async (req, res, next) => {
-  const { id, permissionId } = req.params;
-await softDeleteRolePremission(req, id, permissionId); 
-  
+  const { id, permissionId } = req.params;  // both from URL
+
+  await softDeleteRolePremission(req, id, permissionId);
 
   return res.status(204).send();
 });

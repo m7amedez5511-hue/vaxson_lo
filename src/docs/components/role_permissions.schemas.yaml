@@ -1,0 +1,27 @@
+AssignPermissionRequest:
+  type: object
+  required:
+    - permissionId
+  properties:
+    permissionId:
+      type: string
+      format: uuid
+      description: UUID of the permission to assign to the role
+      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+RolePermissionRecord:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: RolePermission join-table record ID
+      example: "c9d8e7f6-a5b4-3210-fedc-ba9876543210"
+    roleId:
+      type: string
+      format: uuid
+      example: "f5ec9e5e-990e-4c10-8bba-0eb9a0511c7e"
+    permissionId:
+      type: string
+      format: uuid
+      example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
