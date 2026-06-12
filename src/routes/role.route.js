@@ -4,6 +4,7 @@ import { validate } from "../middleware/validate.js";
 import { roleCreateValidator, roleUpdateValidator } from "../validators/role.validator.js";
 import { isAuthorized } from "../middleware/auth.middleware.js";
 import { restrictTo } from "../middleware/permission.middleware.js";
+import { assignPermissionValidator } from "../validators/rolePremisson.validators.js";
 
 
 
@@ -48,4 +49,9 @@ router.put("/:id",restrictTo("update-role"),validate(roleUpdateValidator),RC.upd
 router.get("/archived",restrictTo("read-deleted-role"),RC.fetchArchivedRoles)
 //get archived role using roleId
 router.get("/archived/:id" ,restrictTo("read-deleted-role"), RC.findArchivedRoleById)
+// Assign permission to role
+router.post("/:id/permissions", restrictTo("manage-role-permissions"), validate(assignPermissionValidator), RC.assignPermissionToRole);
+
+// Remove permission from role
+router.delete("/:id/permissions/:permissionId", restrictTo("manage-role-permissions"), RC.removePermissionFromRole);
 export default router

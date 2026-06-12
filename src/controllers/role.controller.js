@@ -1,5 +1,6 @@
+import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
-import { newRole ,getAllMatchRole, getRoleById ,updateRoleFun, softDeleteRole, hardDeleteRole} from "../services/role.service.js";
+import { newRole ,getAllMatchRole, getRoleById ,updateRoleFun, softDeleteRole, hardDeleteRole, assignPermissionToRoleActivity, softDeleteRolePremission} from "../services/role.service.js";
 import { sendResponse } from "../utils/response.js";
 
 /**
@@ -97,3 +98,21 @@ export const softDeletedRole = asyncHandler(async (req,res,nest)=>{
     return res.status(204).send();
 
 })
+
+export const assignPermissionToRole = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const { permissionId } = req.body;
+
+  const result = await assignPermissionToRoleActivity(req, id, permissionId);
+  
+
+  sendResponse(res, 201, "Permission assigned successfully", result);
+});
+
+export const removePermissionFromRole = asyncHandler(async (req, res, next) => {
+  const { id, permissionId } = req.params;
+await softDeleteRolePremission(req, id, permissionId); 
+  
+
+  return res.status(204).send();
+});

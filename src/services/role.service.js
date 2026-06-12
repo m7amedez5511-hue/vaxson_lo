@@ -150,3 +150,46 @@ export const hardDeleteRole = async (roleId) => {
     throw createAppError(500, `Error__${error}`);
   }
 };
+
+//assign permission to role
+export const assignPermissionToRoleActivity = async (req, roleId, permissionId) => {
+  const newRolePremission = await crud.create("rolePermission", { roleId, permissionId })
+  
+  await recordActivity(req, {
+    action: "ASSIGN_PERMISSION_TO_ROLE",
+    module: "Role",
+    recordId: roleId,
+    description: `  تم تعيين صلاحية لدور: ${roleId}`,
+    status: "SUCCESS",
+  });
+  return newRolePremission
+  
+};
+
+//soft delete role permission
+export const softDeleteRolePremission = async (req, roleId, permissionId) => {
+  try {
+    //check if the role permission exists
+    const rolePermission = await crud.findFirst("rolePermission", { roleId, permissionId });
+    if (!rolePermission) {
+      throw createAppError(404, "Role_Permission_NotFound");
+    }
+    await recordActivity(req, {
+      action: "REMOVE_PERMISSION_FROM_ROLE",
+      module: "Role",
+      recordId: roleId,
+      description: `  تم إزالة صلاحية من دور: ${roleId}`,
+      status: "SUCCESS",
+    });
+    return await crud.softDelete("rolePermission", rolePermission.id);
+  } catch (error) {
+    await recordActivity(req, {
+      action: "REMOVE_PERMISSION_FROM_ROLE",
+      module: "Role",
+      description: `فشل إزالة الصلاحية من الدور `,
+      status: "FAILED",
+      errorMessage: error.message,
+    });
+    throw createAppError(500, `Error__${error}`);
+  }
+};
