@@ -100,9 +100,11 @@ export const setRolePermissions = async (req, roleId, permissionIds) => {
       "role",
       { id: roleId, isDeleted: false },
       {
-        permissions: {
-          where: { isDeleted: false },
-          include: { permission: true },
+        include: {
+          permissions: {
+            where: { isDeleted: false },
+            include: { permission: true },
+          },
         },
       },
     );

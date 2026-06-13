@@ -1,5 +1,6 @@
 services:
   logistic-app:
+    build: .
     container_name: logistics-app
     expose:
       - "3000"
