@@ -68,6 +68,7 @@ enum NationalIdType {
   Iqama
   Passport
 }
+
 enum NotificationEntityType {
   DRIVER
   CAR
@@ -172,6 +173,9 @@ model RolePermission {
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permissionId String     @map("permission_id")
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
 
   @@unique([roleId, permissionId])
   @@map("role_permissions")
@@ -296,7 +300,6 @@ model Driver {
   @@index([phone])
   @@index([licenseExpiry])
   @@index([nationalIdExpiry])
-  
   @@map("drivers")
 }
 
@@ -360,9 +363,8 @@ model Car {
 
   @@index([registrationNumber])
   @@index([vinNumber])
-  @@index([registrationExpiryDate]) 
+  @@index([registrationExpiryDate])
   @@index([insuranceExpiryDate])
-
   @@map("cars")
 }
 
@@ -465,9 +467,8 @@ model Trip {
 
   orders Order[]
 
-
-  branchId String? @map("branch_id")
-  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  branchId   String? @map("branch_id")
+  branch     Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
   reportFile String? @map("report_file")
 
   // Audit
@@ -604,7 +605,7 @@ model ActivityLog {
 // targetDate → new unique key → natural new reminder cycle. No cleanup job needed.
 
 model Notification {
-  id         String @id @default(uuid())
+  id         String                 @id @default(uuid())
   entityType NotificationEntityType @map("entity_type")
   docType    NotificationDocType    @map("doc_type")
   kind       NotificationKind
@@ -612,13 +613,13 @@ model Notification {
   // The anchor date for this reminder window (startOf day UTC).
   targetDate DateTime @map("target_date") @db.Date
 
-  sentAt   DateTime @default(now()) @map("sent_at")
+  sentAt    DateTime @default(now()) @map("sent_at")
   createdAt DateTime @default(now()) @map("created_at")
   // "queued" → SMS enqueued in BullMQ
   // "sent"   → SMS worker confirmed delivery
   // "failed" → exhausted retries
-  status   String   @default("queued")
-  smsJobId String?  @map("sms_job_id")
+  status    String   @default("queued")
+  smsJobId  String?  @map("sms_job_id")
 
   // Polymorphic back-relations (only one is non-null per row).
   driverId String? @map("driver_id")
@@ -627,7 +628,7 @@ model Notification {
   carId String? @map("car_id")
   car   Car?    @relation(fields: [carId], references: [id], onDelete: SetNull)
 
-  requeueCount  Int      @default(0)
+  requeueCount Int @default(0)
 
   maintenanceId String?                @map("maintenance_id")
   maintenance   CarMaintenanceHistory? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)

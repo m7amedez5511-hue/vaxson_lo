@@ -16,7 +16,7 @@ import tripRouter from "./trip.route.js"
 import auditRouter from "./audit.route.js"
 import carImageRouter from "./car-image.route.js"
 import dashboardRouter from "./dashboard.route.js"
-
+import rolePremissionRouter from "./rolePremission.route.js"
 import driverReportRouter from "./driver_report.route.js"
 
 const router = express.Router();
@@ -42,6 +42,7 @@ router.use("/v1/maintenance", maintenanceRouter);
 
 router.use("/v1/role",roleRouter)
 router.use("/v1/premission",premissionRouter)
+router.use("/v1/role-permissions", rolePremissionRouter);
 
 router.use("/v1/cars/:carId/maintenance", carMaintenanceRouter);
 router.use("/v1/driver",driverRouter)

@@ -59,7 +59,9 @@ export const getAllMatchRole = async (query,deleted) => {
 export const getRoleById = async (roleId,deleted) => {
   try {
     //get role py using roleID using crud
-    const role = await crud.fetchOne("role", {id:roleId,isDeleted:deleted});
+    const role = await crud.fetchOne("role", {id:roleId,isDeleted:deleted},
+    {select:{id:true,name:true,description:true,createdAt:true,updatedAt:true ,userRoles:{where:{isDeleted:false},select:{permission:{where:{isDeleted:false},select:{id:true,name:true}}}} }}
+    );
     return role;
   } catch (error) {
     throw createAppError(500, `Error__${error}`);
@@ -151,67 +153,3 @@ export const hardDeleteRole = async (roleId) => {
   }
 };
 
-// Assign permission to role
-export const assignPermissionToRoleActivity = async (req, roleId, permissionId) => {
-  // 1. Verify role exists
-  const role = await crud.findById("role", roleId);
-  if (!role) throw createAppError(404, "Role_NotFound");
-
-  // 2. Verify permission exists
-  const permission = await crud.findById("permission", permissionId);
-  if (!permission) throw createAppError(404, "Permission_NotFound");
-
-  // 3. Check for duplicate assignment (409 Conflict)
-  const existing = await crud.findFirst("rolePermission", { roleId, permissionId });
-  if (existing) throw createAppError(409, "Permission_Already_Assigned");
-
-  // 4. Create the link
-  const newRolePermission = await crud.create("rolePermission", { roleId, permissionId });
-
-  await recordActivity(req, {
-    action: "ASSIGN_PERMISSION_TO_ROLE",
-    module: "Role",
-    recordId: roleId,
-    description: `تم تعيين صلاحية "${permission.name}" للدور: ${role.name}`,
-    status: "SUCCESS",
-  });
-
-  return newRolePermission;
-};
-
-// Remove (soft-delete) permission from role
-export const softDeleteRolePremission = async (req, roleId, permissionId) => {
-  try {
-    // 1. Verify role exists
-    const role = await crud.findById("role", roleId);
-    if (!role) throw createAppError(404, "Role_NotFound");
-
-    // 2. Verify the permission is actually assigned to this role
-    const rolePermission = await crud.findFirst("rolePermission", { roleId, permissionId });
-    if (!rolePermission) throw createAppError(404, "Role_Permission_NotFound");
-
-    // 3. Remove it
-    const result = await crud.softDelete("rolePermission", rolePermission.id);
-
-    await recordActivity(req, {
-      action: "REMOVE_PERMISSION_FROM_ROLE",
-      module: "Role",
-      recordId: roleId,
-      description: `تم إزالة صلاحية من الدور: ${role.name}`,
-      status: "SUCCESS",
-    });
-
-    return result;
-  } catch (error) {
-    await recordActivity(req, {
-      action: "REMOVE_PERMISSION_FROM_ROLE",
-      module: "Role",
-      description: `فشل إزالة الصلاحية من الدور`,
-      status: "FAILED",
-      errorMessage: error.message,
-    });
-    // Re-throw known AppErrors as-is; wrap unknown ones
-    if (error.isOperational) throw error;
-    throw createAppError(500, `Error__${error}`);
-  }
-};
