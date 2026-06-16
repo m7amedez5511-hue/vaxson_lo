@@ -48,5 +48,4 @@ router.put("/:id",restrictTo("update-role"),validate(roleUpdateValidator),RC.upd
 router.get("/archived",restrictTo("read-deleted-role"),RC.fetchArchivedRoles)
 //get archived role using roleId
 router.get("/archived/:id" ,restrictTo("read-deleted-role"), RC.findArchivedRoleById)
-
 export default router

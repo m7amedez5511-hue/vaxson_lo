@@ -53,7 +53,7 @@ async function main() {
     {
       name: "إدارة صلاحيات الرتب",
       slug: "manage-role-permissions",
-      module: "Roles",  
+      module: "Roles",
     },
     { name: "عرض الصلاحيات", slug: "read-permission", module: "Permissions" },
 

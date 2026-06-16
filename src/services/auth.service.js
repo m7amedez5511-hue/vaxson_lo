@@ -84,20 +84,20 @@ export const loginFun = async (req, loginData) => {
       throw createAppError(401, "Password_Incorrect");
     }
    
-    
+      // Remove password from returned user object
+    const { password: _, ...userWithoutPassword } = user;
     // ✅  login success
     await recordActivity(req, {
       action: "LOGIN_SUCCESS",
       module: "User",
       recordId: user.id,
       userId: user.id,
-      newData: user,
+      newData: userWithoutPassword,
       description: `تسجيل دخول ناجح للمستخدم: ${user.name || user.phone}`,
       status: "SUCCESS",
     });
 
-    // Remove password from returned user object
-    const { password: _, ...userWithoutPassword } = user;
+  
     return userWithoutPassword;
   } catch (error) {
     try {
@@ -106,6 +106,7 @@ export const loginFun = async (req, loginData) => {
         module: "User",
         recordId: user?.id ,
         userId: user?.id,
+        newData: userWithoutPassword,
         description: `محاولة تسجيل دخول فاشلة: ${loginData.name}}`,
         status: "FAILED",
         errorMessage: error.message,

@@ -1,11 +1,12 @@
-import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
-import { newRole ,getAllMatchRole, getRoleById ,updateRoleFun, softDeleteRoleWithPermissions} from "../services/role.service.js";
+import { newRole ,getAllMatchRole, getRoleById ,updateRoleFun, softDeleteRole, hardDeleteRole} from "../services/role.service.js";
 import { sendResponse } from "../utils/response.js";
 
 /**
  * create role
  */
+
+
 
 export const createRole = asyncHandler(async (req,res,next)=>{
     const roleData = req.body 
@@ -85,12 +86,14 @@ export const updateRole =  asyncHandler(async (req,res,next)=>{
 })
 
 ///soft delete
-export const softDeletedRole = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
+export const softDeletedRole = asyncHandler(async (req,res,nest)=>{
+    const {id} = req.params
 
-  await softDeleteRoleWithPermissions(req, id);
+    const result = await softDeleteRole(req,id)
 
-  // 204 No Content on successful deletion
-  return res.status(204).send();
-});
+    
+    
+     //return res to front
+    return res.status(204).send();
 
+})

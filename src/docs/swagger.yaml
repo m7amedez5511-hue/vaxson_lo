@@ -130,10 +130,6 @@ paths:
 
   /v1/reports/driver/{id}/daily:
     $ref: "./paths/driver_report.path.yaml#/dailyReport"  
-  /v1/role/{id}/permissions:
-    $ref: "./paths/role_permissions.yaml#/permissionsRoot"
-  /v1/role/{id}/permissions/{permissionId}:
-    $ref: "./paths/role_permissions.yaml#/permissionById"  
 components:
   schemas:
     # Auth
@@ -255,10 +251,6 @@ components:
       $ref: "./components/audit.schemas.yaml#/ActivityLogListResponse"
     ActivityLogDetailResponse:
       $ref: "./components/audit.schemas.yaml#/ActivityLogDetailResponse"
-    AssignPermissionRequest:
-      $ref: "./components/role_permissions.schemas.yaml#/AssignPermissionRequest"
-    RolePermissionRecord:
-      $ref: "./components/role_permissions.schemas.yaml#/RolePermissionRecord"  
   securitySchemes:
     bearerAuth:
       $ref: "./components/Utils.schemas.yaml#/bearerAuth"

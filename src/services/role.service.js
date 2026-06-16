@@ -8,6 +8,8 @@ import * as crud from "./crud.service.js";
  * create new role
  */
 
+
+
 export const newRole = async (req, roleData) => {
   try {
     //create role
@@ -37,7 +39,7 @@ export const newRole = async (req, roleData) => {
 };
 
 //get all role matching with query using crud services
-export const getAllMatchRole = async (query, deleted) => {
+export const getAllMatchRole = async (query,deleted) => {
   const features = new PrismaFeatures(prisma.role, query)
     .filter()
     .search(["name", "description"])
@@ -48,58 +50,16 @@ export const getAllMatchRole = async (query, deleted) => {
     ...features.queryOptions.where,
     isDeleted: deleted,
   };
-  features.queryOptions.select = {
-    permissions: {
-      where: { isDeleted: false },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        createdAt: true,
-        updatedAt: true,
-        permission: {
-          select: { id: true, name: true, slug: true, module: true },
-        },
-      },
-    },
-    users: {
-      where: { isDeleted: false },
-      select: { id: true, name: true, email: true, userName: true },
-    },
-  };
+
   const result = await features.exec();
 
   return result;
 };
 
-export const getRoleById = async (roleId, deleted) => {
+export const getRoleById = async (roleId,deleted) => {
   try {
-    const role = await crud.fetchOne(
-      "role",
-      { id: roleId, isDeleted: deleted },
-      {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-          permissions: {
-            where: { isDeleted: false },
-            select: {
-              id: true,
-              permission: {
-                select: { id: true, name: true, slug: true, module: true },
-              },
-            },
-          },
-          users: {
-            where: { isDeleted: false },
-            select: { id: true, name: true, email: true, userName: true },
-          },
-        },
-      },
-    );
+    //get role py using roleID using crud
+    const role = await crud.fetchOne("role", {id:roleId,isDeleted:deleted});
     return role;
   } catch (error) {
     throw createAppError(500, `Error__${error}`);
@@ -143,62 +103,50 @@ export const updateRoleFun = async (req, roleId, newData) => {
   }
 };
 
-/**
- * Delete a role along with any associated role-permission links.
- * - Checks if the role has active permission assignments.
- * - If found, soft-deletes both the role and all linked rolePermission rows
- *   inside a single transaction (atomic — prevents orphaned links).
- * - If no permissions exist, just soft-deletes the role.
- */
-export const softDeleteRoleWithPermissions = async (req, roleId) => {
+///soft delete
+export const softDeleteRole = async (req, roleId) => {
   try {
-    // 1. Verify role exists
+    //check role found
+    //check role found
     const isRoleFound = await crud.findById("role", roleId);
     if (!isRoleFound) throw createAppError(404, "Role_NotFound");
 
-    // 2. Check for any active permission links on this role
-    const linkedPermissions = await prisma.rolePermission.findMany({
-      where: { roleId, isDeleted: false },
-      select: { id: true },
-    });
-
-    // 3. Atomically soft-delete role + its rolePermission links (if any)
-    const now = new Date();
-    await prisma.$transaction([
-      prisma.role.update({
-        where: { id: roleId },
-        data: { isDeleted: true, deletedAt: now },
-      }),
-      ...(linkedPermissions.length > 0
-        ? [
-            prisma.rolePermission.updateMany({
-              where: { roleId, isDeleted: false },
-              data: { isDeleted: true, deletedAt: now },
-            }),
-          ]
-        : []),
-    ]);
-
+    //soft delet this role
+    const isDeletedRole = await crud.softDelete("role", roleId);
     // ✅ register delete role action
     await recordActivity(req, {
       action: "DELETE_ROLE",
       module: "Role",
       recordId: roleId,
-      description: `تم حذف دور: ${isRoleFound.name} (مع ${linkedPermissions.length} صلاحية مرتبطة)`,
+      description: `  تم حزف دور`,
       oldData: isRoleFound,
       status: "SUCCESS",
     });
-
-    return { success: true, removedPermissions: linkedPermissions.length };
+    if (isDeletedRole.isDeleted == false) return isDeletedRole;
   } catch (error) {
+    //  Register delete the role faild
     await recordActivity(req, {
       action: "DELETE_ROLE",
       module: "Role",
-      description: `فشل حذف الدور`,
+      description: `فشل حزف الدور `,
       status: "FAILED",
       errorMessage: error.message,
     });
-    if (error.isOperational) throw error;
+    throw createAppError(500, `Error__${error}`);
+  }
+};
+///hard delete
+export const hardDeleteRole = async (roleId) => {
+  try {
+    //check role found
+    //check role found
+    const isRoleFound = await crud.findById("role", roleId);
+    if (!isRoleFound) throw createAppError(404, "Role_NotFound");
+
+    //soft delet this role
+    const isDeletedRole = await crud.hardDelete("role", roleId);
+    return isDeletedRole;
+  } catch (error) {
     throw createAppError(500, `Error__${error}`);
   }
 };
