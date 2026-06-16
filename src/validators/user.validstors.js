@@ -35,7 +35,7 @@ export const updateUserSchema = z.object({
     .string({
       required_error: "Name is required",
     })
-    .min(2, "Name must be at least 2 characters long"),
+    .min(2, "Name must be at least 2 characters long").optional(),
 
   phone: z
     .string({

@@ -7,6 +7,7 @@ import {
   updateDriverData,
   deleteDriver,
   softDeleteDriverStatusHistory,
+  getArchivedDriverStatusHistory,
 } from "../services/driver.service.js";
 import { createAppError } from "../utils/createAppError.js";
 import { sendResponse } from "../utils/response.js";
@@ -105,7 +106,7 @@ export const fetchArchivedDriverStatusHistory = asyncHandler(
     const driverId = req.params.id;
     //destract query to search
     const query = req.query;
-    const result = await getArchivedCarStatusHistory(driverId, query);
+    const result = await getArchivedDriverStatusHistory(driverId, query);
     //return res
     sendResponse(
       res,

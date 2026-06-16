@@ -1,11 +1,10 @@
-// Saudi Arabia standard timezone offset (UTC+3)
+// Saudi Arabia timezone
+export const SAUDI_TZ = "Asia/Riyadh";
 
-export const SAUDI_OFFSET = 3 * 60 * 60 * 1000;
-
-// Returns a new Date object adjusted to Saudi Arabian time (UTC+3)
+// Returns the current date-time string in Saudi Arabian time (UTC+3)
+// Use this for display/logging only — not for arithmetic with Date objects
 export const getSaudiTime = () => {
-  const nowUtc = new Date();
-  return new Date(nowUtc.getTime() + SAUDI_OFFSET);
+  return new Date().toLocaleString("en-GB", { timeZone: SAUDI_TZ });
 };
 
 // Formats a date to Saudi Arabian standard string (Gregorian)

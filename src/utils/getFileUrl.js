@@ -5,9 +5,8 @@
  * @param {string} filename - The name of the file
  * @returns {string} - The full URL
  */
-export const getFileUrl = (req, folder, filename) => {
+export const getFileUrl = (_req, folder, filename) => {
   if (!filename) return null;
-  const protocol = req.protocol;
-  const host = req.get("host");
-  return `${protocol}://${host}/public/uploads/${folder}/${filename}`;
+  const baseUrl = process.env.API_PUBLIC_URL;
+  return `${baseUrl}/public/uploads/${folder}/${filename}`;
 };

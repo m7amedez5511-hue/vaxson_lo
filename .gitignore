@@ -44,3 +44,5 @@ public/uploads/*
 
 scripts/trigger-cron.js
 
+#docs
+docs/

@@ -125,7 +125,7 @@ export const softDeleteAddress = async (req, addressId) => {
       action: "DELETE_CLIENT_ADDRESS",
       module: "ClientAddress",
       recordId: addressId,
-      description: `فشل في حذف عنوان العميل ${address.city || ""} ${address.district || ""}`,
+      description: `فشل في حذف عنوان العميل ${address?.city || ""} ${address?.district || ""}`,
       status: "FAILED",
       errorMessage: error.message
     });

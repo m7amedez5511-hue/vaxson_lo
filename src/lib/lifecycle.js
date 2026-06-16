@@ -8,11 +8,15 @@ let shuttingDown = false;
  * Gracefully release DB pools, Mongo, and BullMQ queue connections.
  * Required on deploy/restart so connections are not left open until idle timeout.
  */
-export const shutdown = async (label = "app") => {
+export const shutdown = async (label = "app", server = null) => {
   if (shuttingDown) return;
   shuttingDown = true;
 
   console.log(`[${label}] Shutting down — closing connections...`);
+
+  if (server) {
+    await new Promise((resolve) => server.close(resolve));
+  }
 
   try {
     await closeQueues();
@@ -37,7 +41,7 @@ export const shutdown = async (label = "app") => {
   console.log(`[${label}] Shutdown complete.`);
 };
 
-export const registerGracefulShutdown = (label, { onShutdown } = {}) => {
+export const registerGracefulShutdown = (label, { onShutdown, server } = {}) => {
   const handle = async (signal) => {
     console.log(`[${label}] Received ${signal}.`);
     try {
@@ -45,7 +49,7 @@ export const registerGracefulShutdown = (label, { onShutdown } = {}) => {
     } catch (err) {
       console.error(`[${label}] Pre-shutdown hook error:`, err.message);
     }
-    await shutdown(label);
+    await shutdown(label, server);
     process.exit(0);
   };
 

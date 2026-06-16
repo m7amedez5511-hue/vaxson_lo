@@ -25,12 +25,14 @@ export const getArchivedMaintenanceController = asyncHandler(async (req, res) =>
 
 // PATCH /api/v1/cars/:carId/maintenance/:maintenanceId
 export const updateMaintenanceController = asyncHandler(async (req, res) => {
-  const maintenance = await carMaintenanceService.updateMaintenance(req, req.params.maintenanceId, req.body);
+  const { carId, maintenanceId } = req.params;
+  const maintenance = await carMaintenanceService.updateMaintenance(req, maintenanceId, req.body, carId);
   return sendResponse(res, 200, "Maintenance updated successfully", maintenance);
 });
 
 // DELETE /api/v1/cars/:carId/maintenance/:maintenanceId
 export const deleteMaintenanceController = asyncHandler(async (req, res) => {
-  await carMaintenanceService.deleteMaintenance(req, req.params.maintenanceId);
+  const { carId, maintenanceId } = req.params;
+  await carMaintenanceService.deleteMaintenance(req, maintenanceId, carId);
   return res.status(204).send();
 });

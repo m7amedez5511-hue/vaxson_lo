@@ -2,8 +2,8 @@ import { customAlphabet } from 'nanoid'
 
  export const generateUniqueString = (length) => {
 
-    const nanoid = customAlphabet('12345slah.sa', length || 13)
+    const nanoid = customAlphabet('A–Za–z0–9', length || 13)
     return nanoid()
-}
+}   
 
 

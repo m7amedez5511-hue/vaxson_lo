@@ -37,13 +37,13 @@ export const createClient = async (req, clientData) => {
 // get all clients
 export const getAllClients = async (req) => {
   const features = new PrismaFeatures(prisma.client, req.query)
-    .filter()
+    .filter(["isActive", "city", "nationality"])
     .search(["name", "email", "phone"])
-    .sort()
+    .sort(["createdAt", "name", "isActive"])
     .paginate();
 
   features.queryOptions.where = { ...features.queryOptions.where, isDeleted: false };
-  features.queryOptions.select = clientSelect;
+  features.selectOrInclude(clientSelect);
 
   const result = await features.exec();
 
@@ -53,13 +53,13 @@ export const getAllClients = async (req) => {
 // get archived clients
 export const getArchivedClients = async (req) => {
   const features = new PrismaFeatures(prisma.client, req.query)
-    .filter()
+    .filter(["isActive", "city", "nationality"])
     .search(["name", "email", "phone"])
-    .sort()
+    .sort(["createdAt", "name", "isActive"])
     .paginate();
 
   features.queryOptions.where = { ...features.queryOptions.where, isDeleted: true };
-  features.queryOptions.select = clientSelect;
+  features.selectOrInclude(clientSelect);
 
   const result = await features.exec();
 

@@ -6,9 +6,7 @@ export const userSelect = {
   phone: true,
   photo: true,
   roleId: true,
-  role: true,
   branchId: true,
-  branch: true,
   refreshToken: true,
   isActive: true,
   createdAt: true,
@@ -16,4 +14,7 @@ export const userSelect = {
   isDeleted: true,
   deletedAt: true,
   passwordChangedAt: true,
+  role: { select: { name: true, description: true } },
+  branch: { select: { name: true } },
 };
+

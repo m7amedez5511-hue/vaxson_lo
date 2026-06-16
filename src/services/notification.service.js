@@ -2,6 +2,7 @@ import { orphanedDriverReenqueueMsg } from "../views/notification/messages/messa
 import { prisma } from "../lib/prisma.js";
 import { createAppError } from "../utils/createAppError.js";
 import { queueSmsBulk } from "./sms-queue.service.js";
+import { Logger } from "winston";
 
 const FLEET_MANAGER_PHONE = process.env.FLEET_MANAGER_PHONE ?? null;
 
@@ -74,17 +75,20 @@ export const reEnqueueOrphanedNotifications = async () => {
   let reQueued = 0;
   try {
     if (payloads.length > 0) {
-      reQueued = await queueSmsBulk(payloads);
-
       const ids = requeueCandidates.map((n) => n.id);
-      await prisma.notification.updateMany({
-        where: { id: { in: ids } },
-        data: { requeueCount: { increment: 1 } },
-      });
 
-      await prisma.notification.updateMany({
-        where: { id: { in: ids }, requeueCount: { gte: 3 } },
-        data: { status: "failed" },
+      await prisma.$transaction(async (tx) => {
+        reQueued = await queueSmsBulk(payloads);
+
+        await tx.notification.updateMany({
+          where: { id: { in: ids } },
+          data: { requeueCount: { increment: 1 } },
+        });
+
+        await tx.notification.updateMany({
+          where: { id: { in: ids }, requeueCount: { gte: 3 } },
+          data: { status: "failed" },
+        });
       });
     }
 
@@ -115,6 +119,6 @@ export const updateNotificationStatus = async (notificationId, status, smsJobId)
       data: { status, smsJobId },
     });
   } catch (err) {
-    logger.error(`[sms-worker] Failed to update notification ${notificationId} status: ${err.message}`);
+    Logger.error(`[sms-worker] Failed to update notification ${notificationId} status: ${err.message}`);
   }
 };

@@ -9,6 +9,21 @@ AssignPermissionRequest:
       description: UUID of the permission to assign to the role
       example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
+BulkAssignPermissionRequest:
+  type: object
+  required:
+    - permissionIds
+  properties:
+    permissionIds:
+      type: array
+      description: Ordered list of unique permission UUIDs that should be the role's complete permission set after this call
+      items:
+        type: string
+        format: uuid
+      example:
+        - "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        - "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+
 RolePermissionRecord:
   type: object
   properties:

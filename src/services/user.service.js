@@ -121,9 +121,9 @@ export const createNewUser = async (req, userData) => {
 //get all users
 export const getAllUsers = async (query, deleted) => {
   const features = new PrismaFeatures(prisma.user, query)
-    .filter()
+    .filter(["isActive", "roleId", "branchId"])
     .search(["name", "email", "phone", "userName"])
-    .sort()
+    .sort(["createdAt", "name", "isActive"])
     .paginate();
 
   features.queryOptions.where = {
@@ -131,7 +131,7 @@ export const getAllUsers = async (query, deleted) => {
     isDeleted: deleted,
   };
   //remove password from respons
-  features.queryOptions.select = userSelect;
+  features.selectOrInclude(userSelect);
   const result = await features.exec();
 
   return result;

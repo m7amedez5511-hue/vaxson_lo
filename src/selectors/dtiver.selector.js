@@ -1,3 +1,4 @@
+// dtiver.selector.js
 export const driverSelect = {
   id: true,
   name: true,
@@ -21,10 +22,15 @@ export const driverSelect = {
   driverType: true,
   status: true,
   branchId: true,
-  branch: true,
-  statusHistory: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
   isDeleted: true,
+  branch: { select: { name: true } },
+  statusHistory: {
+    orderBy: { createdAt: "desc" },
+    select: { id: true, status: true, createdAt: true },
+  },
 };
+
+export const driverInclude = null;

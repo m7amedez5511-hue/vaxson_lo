@@ -1,12 +1,10 @@
+// trip.selector.js
 export const tripSelect = {
   id: true,
-  tripNumber:true,
-  title:true,
-  car: true,
-  driver: true,
+  tripNumber: true,
+  title: true,
   startTime: true,
   endTime: true,
-  branch:true,
   collectedCount: true,
   deliveredCount: true,
   returnedCount: true,
@@ -14,9 +12,33 @@ export const tripSelect = {
   endReason: true,
   notes: true,
   status: true,
-  orders: true,
   createdAt: true,
   updatedAt: true,
   isDeleted: true,
   deletedAt: true,
+    
+  car: {
+    select: {
+      id: true,
+      manufacturer: true,
+      model: true,
+      plateNumber: true,
+      plateLetters: true,
+    },
+  },
+  driver: {
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      userName: true,
+    },
+  },
+  branch: {
+    select: { id: true, name: true },
+  },
+  orders: true,
 };
+
+   
+export const tripInclude = null;

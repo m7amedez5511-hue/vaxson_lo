@@ -12,9 +12,9 @@ import * as crud from "./crud.service.js"
 export const allPremission = async(query)=>{
 
    const features = new PrismaFeatures(prisma.permission, query )
-    .filter()
+    .filter(["module"])
     .search(["name", "description","slug"])
-    .sort()
+    .sort(["createdAt", "name", "module"])
     .paginate();
 
   features.queryOptions.where = { ...features.queryOptions.where, isDeleted: false };
@@ -23,6 +23,3 @@ export const allPremission = async(query)=>{
 
   return result;
 }
-
-
-

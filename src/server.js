@@ -5,8 +5,6 @@ import { registerGracefulShutdown } from "./lib/lifecycle.js";
 
 const PORT = process.env.PORT || 3000;
 
-registerGracefulShutdown("api");
-
 connectMongoDB()
   .then(() => {
     console.log("Connected to MongoDB successfully.");
@@ -16,7 +14,9 @@ connectMongoDB()
     process.exit(1);
   });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`docs available at http://localhost:${PORT}/api/v1/docs`);
 });
+
+registerGracefulShutdown("api", { server });

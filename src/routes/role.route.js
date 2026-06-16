@@ -34,7 +34,8 @@ router.post("/" ,restrictTo("create-role"),validate(roleCreateValidator),RC.crea
 
 //get all role by query
 router.get("/",restrictTo("read-role"),RC.allRoles)
-
+//get all archived role 
+router.get("/archived",restrictTo("read-deleted-role"),RC.fetchArchivedRoles)
 //get role using roleId
 router.get("/:id" ,restrictTo("read-role"), RC.findRoleById)
 
@@ -44,8 +45,8 @@ router.put("/:id",restrictTo("update-role"),validate(roleUpdateValidator),RC.upd
 // Role-based 
    router.delete('/:id',restrictTo("delete-role"), RC.softDeletedRole);
 //archived ـــــــــــــــــــــــ
-//get all archived role 
-router.get("/archived",restrictTo("read-deleted-role"),RC.fetchArchivedRoles)
+
 //get archived role using roleId
 router.get("/archived/:id" ,restrictTo("read-deleted-role"), RC.findArchivedRoleById)
+
 export default router

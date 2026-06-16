@@ -9,21 +9,21 @@ export const createMaintenance = async (req, maintenanceData) => {
   try {
     const { carId, startAt, endAt } = maintenanceData;
 
-    const car = await prisma.car.findUnique({
-      where: { id: carId },
-    });
-
-    if (!car || car.isDeleted) {
-      throw createAppError(404, "car_not_found");
-    }
-
-    // Logic: Only update car status if it's currently in maintenance
-    const now = new Date();
-    const isStarted = !startAt || new Date(startAt) <= now;
-    const isFinished = endAt && new Date(endAt) <= now;
-    const shouldUpdateStatus = isStarted && !isFinished;
-
     const maintenance = await prisma.$transaction(async (tx) => {
+      const car = await tx.car.findUnique({
+        where: { id: carId },
+      });
+
+      if (!car || car.isDeleted) {
+        throw createAppError(404, "car_not_found");
+      }
+
+      // Logic: Only update car status if it's currently in maintenance
+      const now = new Date();
+      const isStarted = !startAt || new Date(startAt) <= now;
+      const isFinished = endAt && new Date(endAt) <= now;
+      const shouldUpdateStatus = isStarted && !isFinished;
+
       // 1. Create maintenance record
       const maintenance = await tx.carMaintenanceHistory.create({
         data: { ...maintenanceData },
@@ -82,15 +82,15 @@ export const getCarMaintenanceHistory = async (carId) => {
 // Get archived maintenance history (optional carId filter)
 export const getArchivedMaintenance = async (carId, query) => {
   const features = new PrismaFeatures(prisma.carMaintenanceHistory, query)
-    .filter()
-    .sort()
+    .filter(["maintenanceType", "provider"])
+    .sort(["createdAt", "startAt", "endAt", "cost"])
     .paginate();
 
   features.queryOptions.where = { 
     ...features.queryOptions.where, 
     isDeleted: true 
   };
-  features.queryOptions.select = maintenanceArchiveSelect;
+  features.selectOrInclude(maintenanceArchiveSelect);
 
   if (carId) {
     features.queryOptions.where.carId = carId;
@@ -100,10 +100,10 @@ export const getArchivedMaintenance = async (carId, query) => {
 };
 
 //Update maintenance record
-export const updateMaintenance = async (req, maintenanceId, updateData) => {
+export const updateMaintenance = async (req, maintenanceId, updateData, carId) => {
   try {
-    const maintenance = await prisma.carMaintenanceHistory.findUnique({
-      where: { id: maintenanceId },
+    const maintenance = await prisma.carMaintenanceHistory.findFirst({
+      where: { id: maintenanceId, carId },
     });
 
     if (!maintenance) {
@@ -140,15 +140,20 @@ export const updateMaintenance = async (req, maintenanceId, updateData) => {
 };
 
 //Soft delete maintenance and revert car status to Active
-export const deleteMaintenance = async (req, maintenanceId) => {
+export const deleteMaintenance = async (req, maintenanceId, carId) => {
   try {
-    const maintenance = await prisma.carMaintenanceHistory.findUnique({
-      where: { id: maintenanceId },
+    const maintenance = await prisma.carMaintenanceHistory.findFirst({
+      where: { id: maintenanceId, carId },
     });
 
     if (!maintenance) {
       throw createAppError(404, "maintenance_record_not_found");
     }
+
+    const car = await prisma.car.findUnique({
+      where: { id: maintenance.carId },
+      select: { currentStatus: true },
+    });
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Mark as deleted
@@ -160,19 +165,21 @@ export const deleteMaintenance = async (req, maintenanceId) => {
         },
       });
 
-      // 2. Revert car status to Active
-      await tx.car.update({
-        where: { id: maintenance.carId },
-        data: { currentStatus: "Active" },
-      });
+      // 2. Revert car status to Active only if it is currently InMaintenance
+      if (car?.currentStatus === "InMaintenance") {
+        await tx.car.update({
+          where: { id: maintenance.carId },
+          data: { currentStatus: "Active" },
+        });
 
-      // 3. Log status change back to Active in CarStatusHistory
-      await tx.carStatusHistory.create({
-        data: {
-          carId: maintenance.carId,
-          carStatus: "Active",
-        },
-      });
+        // 3. Log status change back to Active in CarStatusHistory
+        await tx.carStatusHistory.create({
+          data: {
+            carId: maintenance.carId,
+            carStatus: "Active",
+          },
+        });
+      }
 
       return { message: "maintenance_deleted_and_car_reverted_to_active" };
     });

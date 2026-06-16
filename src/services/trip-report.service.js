@@ -9,7 +9,7 @@ import { formatOrderRow, formatCarDetails } from "../views/reports/trip-manifest
 // Generate a professional Trip Manifest HTML Report
 export const generateTripManifest = async (req, tripId, clientId = null) => {
   // 1. Fetch Trip Data with full relations
-  const trip = await prisma.trip.findUnique({
+  const trip = await prisma.trip.findFirst({
     where: { id: tripId, isDeleted: false },
     select: {
       ...tripReportSelect,

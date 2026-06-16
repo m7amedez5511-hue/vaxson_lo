@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { getSaudiTime, formatSaudiDate } from "../utils/date.utils.js";
+import { formatSaudiDate } from "../utils/date.utils.js";
 
 // Fetch general counts for the dashboard
 const getStatsCounts = async () => {
@@ -130,7 +130,7 @@ const getLastLogin = async (userId) => {
 
 // Main function to orchestrate dashboard summary
 export const getDashboardSummary = async (userId) => {
-  const now = getSaudiTime();
+  const now = new Date();
   const ninetyDaysFromNow = new Date(now.getTime());
   ninetyDaysFromNow.setDate(now.getDate() + 90);
 

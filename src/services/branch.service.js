@@ -36,13 +36,13 @@ export const createBranch = async (req, branchData) => {
 // Get all active branches
 export const getAllBranches = async (query) => {
     const features = new PrismaFeatures(prisma.branch, query)
-    .filter()
+    .filter(["city", "isActive"])
     .search(["name", "email", "phone"])
-    .sort()
+    .sort(["createdAt", "name", "city", "isActive"])
     .paginate();
 
   features.queryOptions.where = { ...features.queryOptions.where, isDeleted: false };
-  features.queryOptions.select = branchSelect;
+  features.selectOrInclude(branchSelect);
 
   const result = await features.exec();
 
@@ -52,13 +52,13 @@ export const getAllBranches = async (query) => {
 // Get archived branches
 export const getArchivedBranches = async (query) => {
   const features = new PrismaFeatures(prisma.branch, query)
-    .filter()
+    .filter(["city", "isActive"])
     .search(["name", "email", "phone"])
-    .sort()
+    .sort(["createdAt", "name", "city", "isActive"])
     .paginate();
 
   features.queryOptions.where = { ...features.queryOptions.where, isDeleted: true };
-  features.queryOptions.select = branchSelect;
+  features.selectOrInclude(branchSelect);
 
   const result = await features.exec();
 

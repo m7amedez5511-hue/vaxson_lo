@@ -27,30 +27,38 @@ const updateTripCounters = async (tx, tripId, status) => {
 
 // Create a new Order with Hybrid Address Logic
 export const createOrder = async (req, orderData, deliveryAddressData = null, pickupAddressData = null) => {
+  // Track MongoDB docs created before the PG transaction so we can
+  // roll them back (compensating delete) if Prisma fails.
+  const mongoAddressesToRollback = [];
+
   try {
+    // ── Step 1: Write MongoDB addresses BEFORE the Prisma transaction ──
+    // This keeps them outside the tx callback (they can't participate in a
+    // Prisma rollback anyway), and gives us their IDs to embed in the PG row.
+    let deliveryAddressId = orderData.deliveryAddressId;
+    let pickupAddressId = orderData.pickupAddressId;
+
+    if (deliveryAddressData) {
+      const newAddr = await ClientAddress.create({
+        ...deliveryAddressData,
+        clientId: orderData.clientId,
+      });
+      deliveryAddressId = newAddr._id.toString();
+      mongoAddressesToRollback.push(newAddr._id);
+    }
+
+    if (pickupAddressData) {
+      const newAddr = await ClientAddress.create({
+        ...pickupAddressData,
+        clientId: orderData.clientId,
+      });
+      pickupAddressId = newAddr._id.toString();
+      mongoAddressesToRollback.push(newAddr._id);
+    }
+
+    // ── Step 2: Prisma transaction (PostgreSQL only) ──
     const order = await prisma.$transaction(async (tx) => {
-      let deliveryAddressId = orderData.deliveryAddressId;
-      let pickupAddressId = orderData.pickupAddressId;
-
-      // 1. Handle Delivery Address
-      if (deliveryAddressData) {
-        const newAddr = await ClientAddress.create({
-          ...deliveryAddressData,
-          clientId: orderData.clientId,
-        });
-        deliveryAddressId = newAddr._id.toString();
-      }
-
-      // 2. Handle Pickup Address
-      if (pickupAddressData) {
-        const newAddr = await ClientAddress.create({
-          ...pickupAddressData,
-          clientId: orderData.clientId,
-        });
-        pickupAddressId = newAddr._id.toString();
-      }
-
-      // 3. Create Order in PostgreSQL
+      // 1. Create Order in PostgreSQL
       const order = await tx.order.create({
         data: {
           ...orderData,
@@ -60,7 +68,7 @@ export const createOrder = async (req, orderData, deliveryAddressData = null, pi
         },
       });
 
-      // 3. Record Initial History
+      // 2. Record Initial History
       await tx.orderStatusHistory.create({
         data: {
           orderId: order.id,
@@ -69,7 +77,7 @@ export const createOrder = async (req, orderData, deliveryAddressData = null, pi
         },
       });
 
-      // 4. Update Trip Counters if assigned immediately
+      // 3. Record Assigned history if order is immediately linked to a trip
       if (order.tripId) {
         await tx.orderStatusHistory.create({
           data: {
@@ -93,6 +101,14 @@ export const createOrder = async (req, orderData, deliveryAddressData = null, pi
 
     return order;
   } catch (error) {
+    // ── Compensating delete: remove any MongoDB addresses already written ──
+    if (mongoAddressesToRollback.length > 0) {
+      await ClientAddress.deleteMany({ _id: { $in: mongoAddressesToRollback } }).catch((mongoErr) => {
+        // Log but don't swallow the original error
+        console.error("Failed to rollback MongoDB addresses after PG transaction failure:", mongoErr);
+      });
+    }
+
     await recordActivity(req, {
       action: "CREATE_ORDER",
       module: "Order",
@@ -217,9 +233,9 @@ export const transferToTrip = async (req, orderId, newTripId) => {
 // Get all active orders with filtering and pagination
 export const getAllOrders = async (query) => {
   const features = new PrismaFeatures(prisma.order, query)
-    .filter()
+    .filter(["currentStatus", "tripId", "clientId", "branchId", "paymentMethod", "paymentStatus"])
     .search(["shipmentNumber", "recipientName", "recipientPhone"])
-    .sort()
+    .sort(["createdAt", "shipmentNumber", "currentStatus"])
     .paginate();
 
   // Ensure isDeleted is false by default
@@ -234,9 +250,9 @@ export const getAllOrders = async (query) => {
 // Get archived orders
 export const getArchivedOrders = async (query) => {
   const features = new PrismaFeatures(prisma.order, query)
-    .filter()
+    .filter(["currentStatus", "tripId", "clientId", "branchId", "paymentMethod", "paymentStatus"])
     .search(["shipmentNumber", "recipientName", "recipientPhone"])
-    .sort()
+    .sort(["createdAt", "shipmentNumber", "currentStatus"])
     .paginate();
 
   // Archive only
@@ -250,7 +266,7 @@ export const getArchivedOrders = async (query) => {
 
 // Get a single order by ID
 export const getOrderById = async (id) => {
-  const order = await prisma.order.findUnique({
+  const order = await prisma.order.findFirst({
     where: { 
       id,
       isDeleted: false 
@@ -336,4 +352,3 @@ export const softDeleteOrder = async (req, id) => {
     throw error;
   }
 };
-

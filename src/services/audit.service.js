@@ -70,8 +70,8 @@ export const recordActivity = async (req, { action, module, recordId, userId, de
 
 export const getAllActivities = async (query = {}) => {
   const features = new PrismaFeatures(prisma.activityLog, query)
-    .filter()
-    .sort()
+    .filter(["action", "module", "status", "userId"])
+    .sort(["createdAt", "action", "module", "status"])
     .paginate()
     .search(["action", "module"]); // Fields on the model itself
 

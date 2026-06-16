@@ -9,21 +9,15 @@ import * as crud from "./crud.service.js";
 import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 import path from "path";
+import { getFileUrl } from "../utils/getFileUrl.js";
 
 
-//generate url 
-const getDriverImageUrl = (req, filename) => {
-  if (!filename) return null;
-  const protocol = req.protocol;
-  const host = req.get("host");
-  return `${protocol}://${host}/public/uploads/driver-photos/${filename}`;
-};
 // add photo urls to drivers 
 const mapDriverWithImageUrls = (req, driver) => ({
   ...driver,
-  photoUrl: getDriverImageUrl(req, driver.photo),
-  nationalPhotoUrl: getDriverImageUrl(req, driver.nationalPhoto),
-  driverCardPhotoUrl: getDriverImageUrl(req, driver.driverCardPhoto),
+  photoUrl: getFileUrl(req, "driver-photos", driver.photo),
+  nationalPhotoUrl: getFileUrl(req, "driver-photos", driver.nationalPhoto),
+  driverCardPhotoUrl: getFileUrl(req, "driver-photos", driver.driverCardPhoto),
 });
 //delete driver image
 const deleteDriverPhotoFile = async (filename) => {
@@ -134,7 +128,7 @@ export const addDriver = async (req, driverData) => {
 //get all drivers
 export const fetchDrivers = async (req, query, deleted) => {
   const features = new PrismaFeatures(prisma.driver, query)
-    .filter()
+    .filter(["status", "driverType", "nationality", "licenseType", "nationalIdType", "branchId", "isActive"])
     .search([
       "name",
       "email",
@@ -154,17 +148,16 @@ export const fetchDrivers = async (req, query, deleted) => {
       "status",
       "branch",
     ])
-    .sort()
+    .sort(["createdAt", "name", "status", "licenseExpiry", "nationalIdExpiry"])
     .paginate();
 
   features.queryOptions.where = {
     ...features.queryOptions.where,
     isDeleted: deleted,
   };
-  //features.queryOptions.select = driverSelect.select;
   //remove password from respons
 
-  features.queryOptions.select = driverSelect;
+  features.selectOrInclude(driverSelect);
   const result = await features.exec();
 
   return {
@@ -269,7 +262,7 @@ export const updateDriverData = async (req, driverId, updatedData) => {
             driverId: isDriverFound.id,
             status: { not: "InTrip" },
           },
-          data: { status: "InTrip" },
+          data: { status: "InProgress" },
         });
       }
       //check if driver need change branch
@@ -354,10 +347,10 @@ export const deleteDriver = async (req, driverId) => {
   }
 };
 // Get archived status history for driver
-export const getArchivedCarStatusHistory = async (driverId, query) => {
+export const getArchivedDriverStatusHistory = async (driverId, query) => {
   const features = new PrismaFeatures(prisma.driverStatusHistory, query)
-    .filter()
-    .sort()
+    .filter(["status"])
+    .sort(["createdAt", "name", "status", "licenseExpiry", "nationalIdExpiry"])
     .paginate();
 
   features.queryOptions.where = {

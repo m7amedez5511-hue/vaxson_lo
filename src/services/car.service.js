@@ -50,8 +50,8 @@ export const createCar = async (req, carData) => {
 // Get all cars with filtering and pagination
 export const getAllCars = async (query) => {
   const features = new PrismaFeatures(prisma.car, query)
-    .filter()
-    .sort()
+    .filter(["currentStatus", "currentImpoundStatus", "isActive", "branchId", "color", "year"])
+    .sort(["createdAt", "manufacturer", "model", "year", "plateNumber", "currentStatus"])
     .paginate()
     .search(["manufacturer", "model", "plateNumber", "vinNumber"]);
 
@@ -60,7 +60,7 @@ export const getAllCars = async (query) => {
     isDeleted: false,
   };
 
-  features.queryOptions.select = carSelect;
+  features.selectOrInclude(carSelect);
 
   const result = await features.exec();
   return result;
@@ -69,8 +69,8 @@ export const getAllCars = async (query) => {
 // Get archived cars
 export const getArchivedCars = async (query) => {
   const features = new PrismaFeatures(prisma.car, query)
-    .filter()
-    .sort()
+    .filter(["currentStatus", "currentImpoundStatus", "branchId", "color", "year"])
+    .sort(["createdAt", "manufacturer", "model", "year", "plateNumber", "currentStatus"])
     .paginate()
     .search(["manufacturer", "model", "plateNumber", "vinNumber"]);
 
@@ -79,7 +79,7 @@ export const getArchivedCars = async (query) => {
     isDeleted: true,
   };
 
-  features.queryOptions.select = carSelect;
+  features.selectOrInclude(carSelect);
 
   const result = await features.exec();
   return result;
@@ -210,8 +210,8 @@ export const softDeleteCar = async (req, id) => {
 // Get archived status history for a specific car
 export const getArchivedCarStatusHistory = async (carId, query) => {
   const features = new PrismaFeatures(prisma.carStatusHistory, query)
-    .filter()
-    .sort()
+    .filter(["carStatus", "impoundStatus"])
+    .sort(["createdAt", "manufacturer", "model", "year", "plateNumber", "currentStatus"])
     .paginate();
 
   features.queryOptions.where = { 

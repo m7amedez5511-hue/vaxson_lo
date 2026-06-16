@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-const tripTypeEnum = z.enum(["Scheduled", "InProgress", "Completed", "Cancelled"]);
+const tripTypeEnum = z.enum([
+  "Scheduled",
+  "InProgress",
+  "Completed",
+  "Cancelled",
+]);
 export const tripValidator = {
   createTrip: z.object({
     tripNumber: z.string().optional(),
@@ -54,7 +59,8 @@ export const tripValidator = {
       .string({
         required_error: "title is required",
       })
-      .min(3, "title must be at least 3 characters long").optional(),
+      .min(3, "title must be at least 3 characters long")
+      .optional(),
     driverId: z
       .string({
         required_error: "Driver ID is required",
@@ -67,8 +73,18 @@ export const tripValidator = {
       })
       .uuid("Invalid Car ID format")
       .optional(),
+    startTime: z
+      .string({
+        required_error: "startTime ID is required",
+      })
+      .datetime({ offset: true })
+      .or(z.date())
+      .transform((val) => new Date(val))
+      .optional(),
     endTime: z
-      .string()
+      .string({
+        required_error: "endTime ID is required",
+      })
       .datetime({ offset: true })
       .or(z.date())
       .transform((val) => new Date(val))

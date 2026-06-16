@@ -130,7 +130,8 @@ export const findById = async (model, id, options = {}) => {
 
     return record;
   } catch (error) {
-    throw createAppError(400, `Error finding ${model}: ${error.message}`);
+    if (error.status) throw error;
+    throw createAppError(500, `Error finding ${model}: ${error.message}`);
   }
 };
 

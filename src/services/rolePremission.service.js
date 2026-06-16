@@ -19,7 +19,7 @@ export const assignPermissionToRoleActivity = async (
   if (!permission) throw createAppError(404, "Permission_NotFound");
 
   // 3. Check for duplicate assignment (409 Conflict)
-  const existing = await crud.findFirst("rolePermission", {
+  const existing = await crud.fetchOne("rolePermission", {
     roleId,
     permissionId,
   });
@@ -127,16 +127,26 @@ export const softDeleteRolePremission = async (req, roleId, permissionId) => {
     // 1. Verify role exists
     const role = await crud.findById("role", roleId);
     if (!role) throw createAppError(404, "Role_NotFound");
-
+    console.log(roleId, permissionId);
+    
     // 2. Verify the permission is actually assigned to this role
-    const rolePermission = await crud.findFirst("rolePermission", {
+    const rolePermission = await crud.fetchOne("rolePermission", {
       roleId,
       permissionId,
     });
+    console.log(rolePermission);
     if (!rolePermission) throw createAppError(404, "Role_Permission_NotFound");
 
+  
     // 3. Remove it
-    const result = await crud.softDelete("rolePermission", rolePermission.id);
+const result = await prisma.rolePermission.update({
+  where: { id: rolePermission.id },
+  data: {
+    isDeleted: true,
+    deletedAt: new Date(),
+    
+  },
+});
 
     await recordActivity(req, {
       action: "REMOVE_PERMISSION_FROM_ROLE",

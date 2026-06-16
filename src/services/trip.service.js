@@ -8,12 +8,12 @@ import { tripSelect } from "../selectors/trip.selector.js";
 
 //create new trip
 export const newTrip = async (req,tripData) => {
+ 
   return await prisma.$transaction(async (tx) => {
    try {
-     //check driver found
-    const isDriverFound = await crud.findOne("driver", {
-      id: tripData.driverId,
-      status: "Active",
+      // ── Driver: check + update inside the same tx (fixes TOCTOU) ──
+    const isDriverFound = await tx.driver.findFirst({
+      where: { id: tripData.driverId, status: "Active" },
     });
     if (!isDriverFound)
       throw createAppError(404, "driver notFound or not Active");
@@ -29,14 +29,13 @@ export const newTrip = async (req,tripData) => {
       where: { id: isDriverFound.id },
       data: { status: "InTrip" },
     });
-    //check car found
-    const isCarFound = await crud.findOne("car", {
-      id: tripData.carId,
-      currentStatus: "Active",
+
+    // ── Car: check + update inside the same tx (fixes TOCTOU) ──
+    const isCarFound = await tx.car.findFirst({
+      where: { id: tripData.carId, currentStatus: "Active" },
     });
     if (!isCarFound) throw createAppError(404, "Car notFound or not Active");
     //create car history
-
     await tx.carStatusHistory.create({
       data: {
         carId: tripData.carId,
@@ -48,9 +47,11 @@ export const newTrip = async (req,tripData) => {
       where: { id: isCarFound.id },
       data: { currentStatus: "InTrip" },
     });
-    //check branch found
-    const isBranchFound = await crud.findById("branch", tripData.branchId);
+
+    // ── Branch: check inside the same tx ──
+    const isBranchFound = await tx.branch.findUnique({ where: { id: tripData.branchId } });
     if (!isBranchFound) throw createAppError(404, "Branch notFound");
+
     //trip starttime
     const startTime = tripData.startTime || new Date();
     //create trip number
@@ -121,22 +122,27 @@ export const newTrip = async (req,tripData) => {
     });
     throw error
    }
+  }, {
+    // Serializable isolation is the DB-level safety net:
+    // even if two transactions pass the findFirst check simultaneously,
+    // one will be forced to retry/abort rather than both committing.
+    isolationLevel: "Serializable",
   });
 };
 
 //get all trips
 export const fetchAllTrips = async (query,deleted) => {
   const features = new PrismaFeatures(prisma.trip, query)
-    .filter()
+    .filter(["status", "driverId", "carId", "branchId"])
     .search(["carId", "driverId", "tripNumber", "status","title"])
-    .sort()
+    .sort(["createdAt", "tripNumber", "status", "startTime", "endTime"])
     .paginate();
 
   features.queryOptions.where = {
     ...features.queryOptions.where,
     isDeleted: deleted,
   };
-  features.queryOptions.select = tripSelect;
+  features.selectOrInclude(tripSelect);
   const result = await features.exec();
 
   return result;
@@ -186,21 +192,20 @@ export const fetchTripById = async (tripId,deleted) => {
 export const updateTrip = async (req,tripId, tripData) => {
   return prisma.$transaction(async (tx) => {
    try {
-     //check trip found
-    const isTripFound = await crud.findById("trip", tripId);
+     // ── Trip existence check inside tx (fixes TOCTOU) ──
+    const isTripFound = await tx.trip.findUnique({ where: { id: tripId } });
     if (!isTripFound) throw createAppError(404, "Trip Not Found");
     //old data for audit
     const oldData = isTripFound;
+
     //check if need change driver
     if (tripData.driverId && tripData.driverId !== isTripFound.driverId) {
-      //check driver founded
-      const driver = await crud.findOne("driver", {
-        id: tripData.driverId,
-        status: "Active",
+      // ── New driver: check availability inside tx (fixes TOCTOU) ──
+      const driver = await tx.driver.findFirst({
+        where: { id: tripData.driverId, status: "Active" },
       });
       if (!driver)
         throw createAppError(404, "Driver Not Found , or not Active");
-      //chenge driver history and status
 
       const updateDriverStatus = await tx.driver.update({
         where: { id: tripData.driverId },
@@ -212,7 +217,6 @@ export const updateTrip = async (req,tripId, tripData) => {
         data: { status: "Active" },
       });
       //new driver History
-
       const newDriverHistory = await tx.driverStatusHistory.create({
         data: {
           driverId: tripData.driverId,
@@ -221,7 +225,6 @@ export const updateTrip = async (req,tripId, tripData) => {
         },
       });
       //old driver histoy
-
       const oldDriverHistory = await tx.driverStatusHistory.create({
         data: {
           driverId: isTripFound.driverId,
@@ -229,7 +232,7 @@ export const updateTrip = async (req,tripId, tripData) => {
           reason: tripData.reason || "The company needs him for another job",
         },
       });
-      //audit create 
+      //audit create
       await recordActivity(req, {
         action: "CHANGE_TRIP_DRIVER",
         module: "Trip",
@@ -243,29 +246,22 @@ export const updateTrip = async (req,tripId, tripData) => {
 
     //check if need change car
     if (tripData.carId && tripData.carId !== isTripFound.carId) {
-      //check driver founded
-      const car = await crud.findOne("car", {
-        id: tripData.carId,
-        currentStatus: "Active",
+      // ── New car: check availability inside tx (fixes TOCTOU) ──
+      const car = await tx.car.findFirst({
+        where: { id: tripData.carId, currentStatus: "Active" },
       });
       if (!car) throw createAppError(404, "car Not Found or car not Active");
-      //chenge driver history or statu
 
       const updateCarStatus = await tx.car.update({
         where: { id: tripData.carId },
-        data: {
-          currentStatus: "InTrip",
-        },
+        data: { currentStatus: "InTrip" },
       });
       //update old car status
       const updateOldCarStatus = await tx.car.update({
         where: { id: isTripFound.carId },
-        data: {
-          currentStatus: "Active",
-        },
+        data: { currentStatus: "Active" },
       });
       //create newCar history
-
       const newCarHistory = await tx.carStatusHistory.create({
         data: {
           carId: tripData.carId,
@@ -273,7 +269,6 @@ export const updateTrip = async (req,tripId, tripData) => {
         },
       });
       //create old car history
-
       const oldCarHistory = await tx.carStatusHistory.create({
         data: {
           carId: isTripFound.carId,
@@ -299,9 +294,7 @@ export const updateTrip = async (req,tripId, tripData) => {
       //change driver status
       await tx.driver.update({
         where: { id: isTripFound.driverId },
-        data: {
-          status: "Active",
-        },
+        data: { status: "Active" },
       });
       //create driver history
       await tx.driverStatusHistory.create({
@@ -314,9 +307,7 @@ export const updateTrip = async (req,tripId, tripData) => {
       //change car status
       await tx.car.update({
         where: { id: isTripFound.carId },
-        data: {
-          currentStatus: "Active",
-        },
+        data: { currentStatus: "Active" },
       });
       //create car history
       await tx.carStatusHistory.create({
@@ -338,8 +329,8 @@ export const updateTrip = async (req,tripId, tripData) => {
     }
     //if need change branch
     if (tripData.branchId && tripData.branchId !== isTripFound.branchId) {
-      //check branch found
-      const isBranchFound = await crud.findById("branch", tripData.branchId);
+      // ── Branch: check inside tx ──
+      const isBranchFound = await tx.branch.findUnique({ where: { id: tripData.branchId } });
       if (!isBranchFound) throw createAppError(404, "Branch notFound");
     }
     //update trip
@@ -403,6 +394,8 @@ export const updateTrip = async (req,tripId, tripData) => {
     });
     throw error
    }
+  }, {
+    isolationLevel: "Serializable",
   });
 };
 
@@ -427,6 +420,7 @@ export const deleteTrip = async (req,tripId) => {
   });
   return trip;
   } catch (error) {
+    
     //  Register delete the trip faild
     await recordActivity(req, {
       action: "DELETE_TRIP",
@@ -435,5 +429,6 @@ export const deleteTrip = async (req,tripId) => {
       status: "FAILED",
       errorMessage: error.message
     });
+    throw error
   }
 };

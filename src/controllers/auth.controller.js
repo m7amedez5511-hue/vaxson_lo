@@ -13,6 +13,7 @@ import { sendResponse } from "../utils/response.js";
 
 export const login = asyncHandler( async (req,res,next)=>{
 
+console.log("user is her ");
 
 //get data from body 
 const userData = req.body
